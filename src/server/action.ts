@@ -6,9 +6,8 @@ import { requireEmployee, type Employee } from './auth';
 import type { AppRole } from '@/lib/database.types';
 import { revalidatePath } from 'next/cache';
 
-export type ActionResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionResult } from './action-types';
+export type { ActionResult };
 
 export class ActionError extends Error {}
 

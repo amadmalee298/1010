@@ -615,8 +615,9 @@ begin
     'waste','production','production_items','customers','promotions','cash_sessions','cash_transactions','orders',
     'order_items','payments','refunds','customer_points','expenses','audit_logs']
   loop
+    -- Not FORCEd: SECURITY DEFINER functions (owned by the migration role) must bypass RLS;
+    -- API roles (anon/authenticated) never own tables, so RLS always applies to them.
     execute format('alter table public.%I enable row level security', t);
-    execute format('alter table public.%I force row level security', t);
   end loop;
 end $$;
 

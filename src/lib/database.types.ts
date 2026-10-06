@@ -149,6 +149,24 @@ export type AuditLogRow = {
   old_value: Json | null; new_value: Json | null; created_at: Timestamp;
 };
 
+export type RecipeItemCostRow = {
+  id: Uuid; recipe_id: Uuid; ingredient_id: Uuid; ingredient_name: string; unit: string; quantity: number;
+  unit_cost: number; line_cost: number;
+};
+export type RecipeCostRow = {
+  recipe_id: Uuid; product_id: Uuid; product_name: string; name: string; version: number; is_active: boolean;
+  yield_quantity: number; yield_unit: string; units_per_sale: number; price: number; net_price: number;
+  ingredient_count: number; recipe_cost: number; cost_per_yield: number; cost_per_selling_unit: number;
+  gross_profit: number; gross_margin: number | null;
+};
+export type ProductCostRow = {
+  product_id: Uuid; name_th: string; category_id: Uuid | null; price: number; inventory_mode: InventoryMode;
+  is_active: boolean; net_price: number; unit_cost: number | null; recipe_id: Uuid | null;
+  finished_item_id: Uuid | null; finished_stock: number | null;
+};
+
+type View<R> = { Row: R; Relationships: [] };
+
 /** Function signature helper. */
 type Fn<A, R> = { Args: A; Returns: R };
 
@@ -184,12 +202,21 @@ export interface Database {
       expenses: Table<ExpenseRow, 'expense_date' | 'category' | 'description' | 'amount'>;
       audit_logs: Table<AuditLogRow, 'action' | 'entity'>;
     };
-    Views: Record<string, never>;
+    Views: {
+      recipe_item_costs: View<RecipeItemCostRow>;
+      recipe_costs: View<RecipeCostRow>;
+      product_costs: View<ProductCostRow>;
+    };
     Functions: {
       current_app_role: Fn<Record<string, never>, AppRole | null>;
       has_role: Fn<{ allowed: AppRole[] }, boolean>;
       is_staff: Fn<Record<string, never>, boolean>;
       claim_first_owner: Fn<{ p_display_name?: string }, string>;
+      save_recipe: Fn<{
+        p_product_id: string; p_name: string; p_yield_quantity: number; p_yield_unit: string;
+        p_units_per_sale: number; p_items: Json; p_note?: string | null;
+      }, string>;
+      net_of_vat: Fn<{ p_amount: number }, number>;
     };
     Enums: {
       app_role: AppRole;
@@ -213,4 +240,5 @@ export interface Database {
 
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+export type Views<T extends keyof Database['public']['Views']> = Database['public']['Views'][T]['Row'];
 export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
