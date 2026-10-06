@@ -23,6 +23,7 @@ export const resetPasswordSchema = z.object({ user_id: uuid, password });
 const bool = z.preprocess((v) => v === true || v === 'on' || v === 'true', z.boolean());
 export const settingsSchema = z.object({
   shop_name: requiredText(100),
+  company_name: z.string().trim().max(150).default(''),
   shop_address: z.string().trim().max(300).default(''),
   shop_phone: z.string().trim().max(30).default(''),
   tax_id: z.string().trim().regex(/^(\d{13})?$/, '13 digits').default(''),

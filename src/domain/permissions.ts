@@ -25,6 +25,8 @@ export const CAPABILITIES = {
   refund: MANAGEMENT,
   cancelOrder: MANAGEMENT,
   viewReports: MANAGEMENT,
+  approveBills: MANAGEMENT,
+  linkTelegram: FRONT_OF_HOUSE,
   manageEmployees: OWNER_ONLY,
   manageSettings: OWNER_ONLY,
   viewAudit: OWNER_ONLY,

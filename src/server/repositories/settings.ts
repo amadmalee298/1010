@@ -5,14 +5,14 @@ import type { VatConfig } from '@/domain/costing';
 import { unwrap } from '../db';
 
 export interface ShopSettings {
-  shop_name: string; shop_address: string; shop_phone: string; tax_id: string;
+  shop_name: string; company_name: string; shop_address: string; shop_phone: string; tax_id: string;
   vat_enabled: boolean; vat_rate: number; vat_inclusive: boolean; promptpay_id: string;
   baht_per_point: number; point_value: number; min_redeem_points: number; max_cashier_discount: number;
   receipt_footer: string; locale: string;
 }
 
 export const DEFAULT_SETTINGS: ShopSettings = {
-  shop_name: 'Custard', shop_address: '', shop_phone: '', tax_id: '', vat_enabled: false, vat_rate: 7, vat_inclusive: true,
+  shop_name: 'Custard', company_name: '', shop_address: '', shop_phone: '', tax_id: '', vat_enabled: false, vat_rate: 7, vat_inclusive: true,
   promptpay_id: '', baht_per_point: 25, point_value: 1, min_redeem_points: 10, max_cashier_discount: 50,
   receipt_footer: 'ขอบคุณค่ะ', locale: 'th',
 };

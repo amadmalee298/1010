@@ -60,6 +60,31 @@
 `supabase/migrations` **เรียงตามชื่อไฟล์** (000100 → 000800) กด Run ทีละไฟล์ (เปิดไฟล์ใน GitHub → ปุ่ม Raw → เลือกทั้งหมด → คัดลอก)
 วิธีนี้ CLI จะไม่รู้ว่ารันไปแล้ว ถ้าใช้วิธีนี้ให้ใช้วิธีเดียวกันตลอด อย่าสลับกับ workflow
 
+## Bills via Telegram (AI reads bills, manager approves) — รับบิลผ่าน Telegram
+
+Staff send a **bill photo** (AI reads it) or type an expense that has **no receipt** (e.g. `ค่ากุ้งสด ปลาหมึก 1060`)
+to the shop's Telegram bot. It lands in **บิลรออนุมัติ** (`/bills`); a manager checks the lines, maps
+ingredient lines to stock, and approves. Ingredient lines are posted as PURCHASE to the stock ledger at the bill
+price; other lines become one expense. No-receipt items get a **ใบรับรองแทนใบเสร็จรับเงิน** numbered
+`2569/10-001`, printable from the app and filed as PDF in Google Drive.
+
+All three parts are optional; each one that is missing just switches that feature off.
+
+| Vercel environment variable | Where it comes from |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | Telegram → @BotFather → `/newbot` |
+| `TELEGRAM_WEBHOOK_SECRET` | any random text, 16+ letters/digits |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → API keys (paid per use) |
+| `GOOGLE_DRIVE_SCRIPT_URL`, `GOOGLE_DRIVE_SCRIPT_SECRET` | the Apps Script in `docs/google-drive-apps-script.gs` |
+
+1. Add the variables in Vercel → Settings → Environment Variables, then **Redeploy**.
+2. Owner: Settings → *การเชื่อมต่อ* → **เชื่อมบอท Telegram กับแอปนี้** (registers the webhook).
+3. Each employee: menu **เชื่อม Telegram** → create link → open Telegram (links their account).
+4. Google Drive: open script.google.com → New project → paste `docs/google-drive-apps-script.gs` → set `SECRET`
+   → Deploy → New deployment → Web app (*Execute as: Me*, *Who has access: Anyone*) → copy the URL.
+   Files go to My Drive / Custard POS / `<ปี พ.ศ.-เดือน>` / รูปบิล and ใบรับรองแทนใบเสร็จ.
+5. Settings → shop info: fill **ชื่อนิติบุคคลบนเอกสาร**, tax ID, address and phone — they print on the substitute receipt.
+
 ## Local development
 
 ```bash

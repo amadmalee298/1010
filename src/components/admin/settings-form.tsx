@@ -23,6 +23,7 @@ export function SettingsForm({ settings }: { settings: SettingsInput }) {
         <CardHeader><CardTitle>{A.shop}</CardTitle></CardHeader>
         <CardContent className="grid gap-3">
           <Field label={A.shopName} error={err('shop_name')}><Input name="shop_name" defaultValue={settings.shop_name} required /></Field>
+          <Field label={A.companyName}><Input name="company_name" defaultValue={settings.company_name} /></Field>
           <Field label={A.address}><Input name="shop_address" defaultValue={settings.shop_address} /></Field>
           <Field label={A.phone}><Input name="shop_phone" defaultValue={settings.shop_phone} /></Field>
           <Field label={A.taxId} error={err('tax_id')}><Input name="tax_id" inputMode="numeric" defaultValue={settings.tax_id} /></Field>

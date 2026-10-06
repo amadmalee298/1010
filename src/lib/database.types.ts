@@ -145,6 +145,19 @@ export type ExpenseRow = {
   receipt_path: string | null; created_by: Uuid | null; created_at: Timestamp;
   voided_at: Timestamp | null; void_reason: string | null;
 };
+export type BillStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type BillSubmissionRow = {
+  id: Uuid; submission_number: string; source: 'TELEGRAM' | 'APP'; telegram_update_id: number | null;
+  telegram_chat_id: number | null; submitted_by: Uuid | null; submitter_name: string; has_receipt: boolean;
+  photo_path: string | null; photo_url: string | null; message_text: string | null; extraction: Json | null;
+  extraction_error: string | null; vendor: string | null; bill_date: string | null; total: number | null;
+  status: BillStatus; reviewed_by: Uuid | null; reviewed_at: Timestamp | null; review_note: string | null;
+  approved_lines: Json | null; expense_id: Uuid | null; substitute_number: string | null; substitute_url: string | null;
+  created_at: Timestamp; updated_at: Timestamp;
+};
+export type TelegramAccountRow = {
+  id: Uuid; telegram_user_id: number; employee_id: Uuid; chat_id: number; username: string | null; linked_at: Timestamp;
+};
 export type AuditLogRow = {
   id: Uuid; user_id: Uuid | null; action: string; entity: string; entity_id: Uuid | null;
   old_value: Json | null; new_value: Json | null; created_at: Timestamp;
@@ -242,6 +255,8 @@ export interface Database {
       customer_points: Table<CustomerPointsRow, 'customer_id' | 'change' | 'balance_after' | 'reason'>;
       expenses: Table<ExpenseRow, 'expense_date' | 'category' | 'description' | 'amount'>;
       audit_logs: Table<AuditLogRow, 'action' | 'entity'>;
+      bill_submissions: Table<BillSubmissionRow, 'submission_number' | 'source' | 'submitter_name' | 'has_receipt'>;
+      telegram_accounts: Table<TelegramAccountRow, 'telegram_user_id' | 'employee_id' | 'chat_id'>;
     };
     Views: {
       recipe_item_costs: View<RecipeItemCostRow>;
@@ -302,6 +317,21 @@ export interface Database {
       report_employee_sales: Fn<{ p_from: string; p_to: string }, EmployeeSalesRow[]>;
       dashboard: Fn<{ p_date?: string | null }, Json>;
       adjust_customer_points: Fn<{ p_customer_id: string; p_change: number; p_note: string }, CustomerRow>;
+      create_telegram_link_code: Fn<Record<string, never>, string>;
+      unlink_telegram: Fn<{ p_employee_id: string }, undefined>;
+      telegram_link_account: Fn<{ p_code: string; p_telegram_user_id: number; p_chat_id: number; p_username: string | null }, string>;
+      telegram_employee: Fn<{ p_telegram_user_id: number }, { employee_id: Uuid; display_name: string }[]>;
+      submit_bill: Fn<{
+        p_telegram_update_id: number; p_chat_id: number; p_employee_id: string; p_has_receipt: boolean;
+        p_photo_path: string | null; p_message_text: string | null; p_extraction: Json | null; p_extraction_error: string | null;
+        p_vendor: string | null; p_bill_date: string | null; p_total: number | null;
+      }, BillSubmissionRow>;
+      approve_bill: Fn<{
+        p_id: string; p_bill_date: string | null; p_vendor: string | null; p_lines: Json; p_category: string;
+        p_payment_method?: PaymentMethod; p_from_drawer?: boolean;
+      }, BillSubmissionRow>;
+      reject_bill: Fn<{ p_id: string; p_reason: string }, BillSubmissionRow>;
+      set_bill_links: Fn<{ p_id: string; p_photo_url: string | null; p_substitute_url: string | null }, undefined>;
     };
     Enums: {
       app_role: AppRole;
@@ -318,6 +348,7 @@ export interface Database {
       cash_session_status: CashSessionStatus;
       cash_txn_type: CashTxnType;
       points_reason: PointsReason;
+      bill_status: BillStatus;
     };
     CompositeTypes: Record<string, never>;
   };
