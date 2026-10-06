@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import type { Database } from '@/lib/database.types';
 
-const PUBLIC_PATHS = ['/login', '/auth', '/offline', '/manifest.webmanifest', '/sw.js'];
+const PUBLIC_PATHS = ['/login', '/auth', '/offline', '/manifest.webmanifest', '/sw.js', '/icons/'];
 
 /** Refreshes the auth session cookie and redirects anonymous users to /login. */
 export async function updateSession(request: NextRequest): Promise<NextResponse> {

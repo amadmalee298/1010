@@ -115,3 +115,11 @@ describe('csv', () => {
     expect(toCsv(['ชื่อ', 'ยอด'], [['คัสตาร์ด', 59]])).toBe('﻿ชื่อ,ยอด\r\nคัสตาร์ด,59');
   });
 });
+
+import { auditDiff } from '@/domain/audit';
+describe('auditDiff', () => {
+  it('lists changed fields and ignores timestamps', () => {
+    expect(auditDiff({ name: 'a', price: 1, updated_at: 'x' }, { name: 'b', price: 1, updated_at: 'y' })).toEqual([{ field: 'name', from: 'a', to: 'b' }]);
+    expect(auditDiff(null, { id: '1' })).toEqual([{ field: 'id', from: '∅', to: '1' }]);
+  });
+});

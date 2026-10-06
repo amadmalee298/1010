@@ -8,7 +8,6 @@ import './globals.css';
 export const metadata: Metadata = {
   title: { default: 'Custard POS', template: '%s · Custard POS' },
   description: 'ระบบขายและบริหารร้านขนมหวาน Custard',
-  manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'Custard POS', statusBarStyle: 'default' },
   icons: { icon: '/icons/icon.svg', apple: '/icons/apple-touch-icon.png' },
 };

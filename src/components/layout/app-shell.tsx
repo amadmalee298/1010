@@ -11,6 +11,7 @@ import type { AppRole } from '@/lib/database.types';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { NavIcon } from './nav-icon';
 import { OnlineStatus } from '@/components/pwa/online-status';
+import { LocaleSwitch } from './locale-switch';
 
 interface ShellProps {
   role: AppRole;
@@ -63,6 +64,7 @@ export function AppShell({ role, displayName, signOut, children }: ShellProps) {
         <p className="font-medium">{displayName}</p>
         <p className="text-xs text-muted-foreground">{t.roles[role]}</p>
       </div>
+      <LocaleSwitch />
       <form action={signOut}>
         <button type="submit" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-muted">
           <LogOut className="size-5" aria-hidden /> {t.nav.signOut}

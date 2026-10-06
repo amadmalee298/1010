@@ -135,6 +135,17 @@ export const en: Dictionary = {
     type: 'Type', percent: 'Percent off', fixed: 'Amount off', value: 'Value', minSubtotal: 'Minimum subtotal', maxDiscount: 'Max discount (blank = no cap)',
     membersOnly: 'Members only', startsAt: 'Starts', endsAt: 'Ends',
   },
+  admin: {
+    employees: 'Employees', newEmployee: 'New employee', editEmployee: 'Edit employee', email: 'Login email', role: 'Role',
+    tempPassword: 'Initial password (min 8 chars)', resetPassword: 'Set new password', newPassword: 'New password',
+    serviceKeyMissing: 'SUPABASE_SERVICE_ROLE_KEY is not configured on the server, so new accounts cannot be created',
+    settings: 'Shop settings', shop: 'Shop details (printed on receipts)', shopName: 'Shop name', address: 'Address', phone: 'Phone',
+    taxId: 'Tax ID', receiptFooter: 'Receipt footer', tax: 'Tax', vatEnabled: 'VAT registered', vatRate: 'VAT rate (%)',
+    vatInclusive: 'Prices include VAT', payments: 'Payments', promptpay: 'PromptPay (mobile / 13-digit ID)',
+    maxCashierDiscount: 'Max cashier discount (THB)', loyalty: 'Loyalty', bahtPerPoint: 'THB spent per point',
+    pointValue: 'Value of 1 point (THB)', minRedeem: 'Minimum points to redeem', language: 'Language',
+    audit: 'Audit log', action: 'Action', entity: 'Entity', changes: 'Changes', user: 'User', allEntities: 'All entities',
+  },
   errors: {
     generic: 'Something went wrong, please try again', permission: 'You are not allowed to do this', validation: 'Invalid data',
     insufficientStock: 'Insufficient stock', notFound: 'Not found', duplicate: 'Already exists',

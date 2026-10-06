@@ -42,7 +42,7 @@ export function RankedBars({ data, title, unit = '฿' }: { data: Point[]; title
     <figure aria-label={title}>
       <ResponsiveContainer width="100%" height={Math.max(120, data.length * 44)}>
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 72, left: 8, bottom: 0 }}>
-          <XAxis type="number" hide />
+          <XAxis type="number" dataKey="value" hide domain={[0, 'dataMax']} />
           <YAxis type="category" dataKey="label" tick={{ fill: AXIS, fontSize: 13 }} tickLine={false} axisLine={false} width={96} />
           <Tooltip cursor={{ fill: '#f5ecdd' }} content={<TooltipBox unit={unit} />} />
           <Bar dataKey="value" fill={BAR} radius={[0, 4, 4, 0]} maxBarSize={24}>

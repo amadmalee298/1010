@@ -137,6 +137,17 @@ export const th = {
     type: 'ประเภท', percent: 'ลดเป็น %', fixed: 'ลดเป็นบาท', value: 'มูลค่า', minSubtotal: 'ยอดขั้นต่ำ', maxDiscount: 'ลดสูงสุด (ไม่ใส่ = ไม่จำกัด)',
     membersOnly: 'เฉพาะสมาชิก', startsAt: 'เริ่ม', endsAt: 'สิ้นสุด',
   },
+  admin: {
+    employees: 'พนักงาน', newEmployee: 'เพิ่มพนักงาน', editEmployee: 'แก้ไขพนักงาน', email: 'อีเมลเข้าระบบ', role: 'ตำแหน่ง',
+    tempPassword: 'รหัสผ่านเริ่มต้น (อย่างน้อย 8 ตัว)', resetPassword: 'ตั้งรหัสผ่านใหม่', newPassword: 'รหัสผ่านใหม่',
+    serviceKeyMissing: 'ยังไม่ได้ตั้งค่า SUPABASE_SERVICE_ROLE_KEY บนเซิร์ฟเวอร์ จึงสร้างบัญชีใหม่ไม่ได้',
+    settings: 'ตั้งค่าร้าน', shop: 'ข้อมูลร้าน (แสดงบนใบเสร็จ)', shopName: 'ชื่อร้าน', address: 'ที่อยู่', phone: 'โทรศัพท์',
+    taxId: 'เลขผู้เสียภาษี', receiptFooter: 'ข้อความท้ายใบเสร็จ', tax: 'ภาษี', vatEnabled: 'จดทะเบียน VAT', vatRate: 'อัตรา VAT (%)',
+    vatInclusive: 'ราคาขายรวม VAT แล้ว', payments: 'การชำระเงิน', promptpay: 'พร้อมเพย์ (เบอร์มือถือ / เลข 13 หลัก)',
+    maxCashierDiscount: 'ส่วนลดสูงสุดที่แคชเชียร์ให้ได้ (บาท)', loyalty: 'สะสมแต้ม', bahtPerPoint: 'ซื้อกี่บาทได้ 1 แต้ม',
+    pointValue: '1 แต้มมีค่า (บาท)', minRedeem: 'แลกขั้นต่ำ (แต้ม)', language: 'ภาษา',
+    audit: 'บันทึกการใช้งาน', action: 'การกระทำ', entity: 'ข้อมูล', changes: 'การเปลี่ยนแปลง', user: 'ผู้ใช้', allEntities: 'ทุกประเภท',
+  },
   errors: {
     generic: 'เกิดข้อผิดพลาด กรุณาลองใหม่', permission: 'ไม่มีสิทธิ์ทำรายการนี้', validation: 'ข้อมูลไม่ถูกต้อง',
     insufficientStock: 'วัตถุดิบไม่พอ', notFound: 'ไม่พบข้อมูล', duplicate: 'ข้อมูลซ้ำกับที่มีอยู่แล้ว',

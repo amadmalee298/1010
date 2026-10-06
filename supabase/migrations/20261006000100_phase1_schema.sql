@@ -510,7 +510,8 @@ begin
     perform public.write_audit('INSERT', tg_table_name, new.id, null, to_jsonb(new));
     return new;
   elsif tg_op = 'UPDATE' then
-    if to_jsonb(old) is distinct from to_jsonb(new) then
+    -- ignore no-op saves (only updated_at changed)
+    if (to_jsonb(old) - 'updated_at') is distinct from (to_jsonb(new) - 'updated_at') then
       perform public.write_audit('UPDATE', tg_table_name, new.id, to_jsonb(old), to_jsonb(new));
     end if;
     return new;

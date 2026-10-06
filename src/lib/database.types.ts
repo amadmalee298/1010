@@ -252,6 +252,7 @@ export interface Database {
       kitchen_queue: View<KitchenQueueRow>;
       product_availability: View<{ product_id: Uuid; available: number | null }>;
       cash_session_summary: View<CashSessionSummaryRow>;
+      employee_directory: View<{ id: Uuid; user_id: Uuid | null; display_name: string; phone: string | null; is_active: boolean; created_at: Timestamp; role: AppRole; email: string | null }>;
     };
     Functions: {
       current_app_role: Fn<Record<string, never>, AppRole | null>;
