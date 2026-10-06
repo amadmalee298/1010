@@ -41,7 +41,7 @@
 2. **คัดลอก Connection string ของ Supabase (ไม่ต้องสร้าง token):** เปิดโปรเจกต์ → ปุ่ม **Connect** ด้านบนของหน้า
    → แท็บ **Connection String** → Type: **URI** → Method: **Session pooler** → คัดลอกข้อความที่ขึ้นต้นด้วย `postgresql://`
    (ใช้ *Session pooler* เท่านั้น — *Direct connection* เป็น IPv6 ซึ่ง GitHub Actions เชื่อมไม่ได้)
-   ปล่อย `[YOUR-PASSWORD]` ไว้ตามเดิมได้ ระบบจะเติมรหัสผ่านให้เอง
+   ปล่อย `[YOUR-PASSWORD]` ไว้ตามเดิม ระบบจะใช้รหัสจาก `SUPABASE_DB_PASSWORD` เสมอ (คัดลอก-วาง อย่าพิมพ์เอง)
 3. **ใส่ Secrets ใน GitHub:** repo → Settings → Secrets and variables → Actions → New repository secret ใส่ 2 ตัว:
    * `SUPABASE_DB_URL` — connection string จากข้อ 2
    * `SUPABASE_DB_PASSWORD` — รหัสผ่านฐานข้อมูลที่ตั้งตอนสร้างโปรเจกต์ (ลืม: Project Settings → Database → Reset database password)
