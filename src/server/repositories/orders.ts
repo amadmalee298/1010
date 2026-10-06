@@ -1,13 +1,12 @@
 import 'server-only';
 import type { SupabaseServerClient } from '@/lib/supabase/server';
-import type { Json, OrderStatus, Tables, Views } from '@/lib/database.types';
+import type { Json, OrderStatus, Tables } from '@/lib/database.types';
 import { orderDocumentSchema, quoteResultSchema, type CreateOrderInput, type OrderDocument, type QuoteResult } from '@/domain/schemas/orders';
 import type { z } from 'zod';
 import type { quoteOrderSchema } from '@/domain/schemas/orders';
 import { unwrap } from '../db';
 
 export type OrderRow = Tables<'orders'>;
-export type KitchenTicket = Views<'kitchen_queue'>;
 
 const toDoc = (json: Json): OrderDocument => orderDocumentSchema.parse(json);
 
@@ -46,13 +45,4 @@ export async function listOrders(
   if (status) q = q.eq('status', status);
   if (search) q = q.ilike('order_number', `%${search.replace(/[%_]/g, '')}%`);
   return unwrap(await q);
-}
-
-export async function listKitchenQueue(db: SupabaseServerClient): Promise<KitchenTicket[]> {
-  return unwrap(await db.from('kitchen_queue').select('*').order('created_at'));
-}
-
-export async function setKitchenStatus(db: SupabaseServerClient, id: string, status: 'PENDING' | 'PREPARING' | 'READY' | 'SERVED'): Promise<void> {
-  const { error } = await db.rpc('set_kitchen_status', { p_order_id: id, p_status: status });
-  if (error) unwrap({ data: null, error });
 }

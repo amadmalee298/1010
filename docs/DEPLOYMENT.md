@@ -7,7 +7,7 @@
    or, without a computer, the **Database migrations** GitHub Actions workflow (see the iPhone section below).
 3. Auth → Providers → Email: enable email/password; disable public sign-ups
    (staff accounts are created by the owner from the Employees page).
-4. Database → Replication: the migration adds `orders` to `supabase_realtime` (kitchen display).
+4. Database → Replication: the migration adds `orders` to `supabase_realtime`.
 
 ## 2. Vercel
 
@@ -25,7 +25,7 @@
 2. Sign in to the app with it: the first account to sign in while no employees exist becomes
    **OWNER** automatically (`claim_first_owner`). After that this path is closed.
 3. Settings: shop name/address/tax ID, VAT, PromptPay ID, loyalty rules.
-4. Employees: create manager, cashier and kitchen accounts.
+4. Employees: create manager and cashier accounts.
 5. Catalog: categories → ingredients → products → recipes → opening stock
    (Inventory → Adjust, with unit cost).
 

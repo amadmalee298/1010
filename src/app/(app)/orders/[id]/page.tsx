@@ -34,7 +34,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       />
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge>{t.orders.status[order.status]}</Badge>
-        <Badge variant="info">{t.kitchen.status[order.kitchen_status]}</Badge>
         {order.cancel_reason ? <Badge variant="destructive">{order.cancel_reason}</Badge> : null}
       </div>
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">

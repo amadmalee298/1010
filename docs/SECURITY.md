@@ -5,7 +5,6 @@
 | Capability | OWNER | MANAGER | CASHIER | KITCHEN |
 |---|:-:|:-:|:-:|:-:|
 | Sell, view orders, cash drawer, customers | ✓ | ✓ | ✓ | |
-| Kitchen display | ✓ | ✓ | ✓ | ✓ |
 | Record waste | ✓ | ✓ | ✓ | |
 | Products, categories, ingredients, recipes, costs | ✓ | ✓ | | |
 | Stock adjustments & counts, production, purchasing | ✓ | ✓ | | |

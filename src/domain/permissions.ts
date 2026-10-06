@@ -11,7 +11,6 @@ export const OWNER_ONLY: readonly AppRole[] = ['OWNER'];
 
 export const CAPABILITIES = {
   sell: FRONT_OF_HOUSE,
-  viewKitchen: ALL_ROLES,
   manageCatalog: MANAGEMENT,
   manageRecipes: MANAGEMENT,
   manageIngredientCosts: MANAGEMENT,
@@ -37,9 +36,9 @@ export function can(role: AppRole | null | undefined, capability: Capability): b
   return !!role && (CAPABILITIES[capability] as readonly AppRole[]).includes(role);
 }
 
-/** Landing page after sign-in. */
+/** Landing page after sign-in. KITCHEN has no screen since the kitchen display was removed. */
 export function homePathFor(role: AppRole): string {
-  if (role === 'KITCHEN') return '/kitchen';
+  if (role === 'KITCHEN') return '/forbidden';
   if (role === 'CASHIER') return '/pos';
   return '/dashboard';
 }

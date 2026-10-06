@@ -11,7 +11,7 @@ export const en: Dictionary = {
     export: 'Export', today: 'Today', details: 'Details', reason: 'Reason', type: 'Type', create: 'Create', last30: 'Last 30 days',
   },
   nav: {
-    pos: 'POS', orders: 'Orders', kitchen: 'Kitchen', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
+    pos: 'POS', orders: 'Orders', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
     ingredients: 'Ingredients', recipes: 'Recipes', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
     purchasing: 'Purchasing', customers: 'Customers', promotions: 'Promotions', expenses: 'Expenses', cash: 'Cash drawer',
     reports: 'Reports', employees: 'Employees', audit: 'Audit log', settings: 'Settings', signOut: 'Sign out',
@@ -76,10 +76,6 @@ export const en: Dictionary = {
     restock: 'Return items to stock (still sellable)', refundMethod: 'Refund via', refundAmount: 'Estimated refund',
     cogs: 'COGS', grossProfit: 'Gross profit', receipt: 'Receipt', taxInvoice: 'Abbreviated tax invoice', copy: 'Copy',
     refunds: 'Refund history',
-  },
-  kitchen: {
-    title: 'Kitchen display', status: { PENDING: 'Pending', PREPARING: 'Preparing', READY: 'Ready', SERVED: 'Served' },
-    start: 'Start', done: 'Done', serve: 'Served', back: 'Back', minutes: 'min', empty: 'Empty', sound: 'Sound alerts',
   },
   production: {
     title: 'Production', newProduction: 'Plan production', product: 'Product', batches: 'Batches', planned: 'Planned output',

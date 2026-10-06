@@ -13,7 +13,7 @@ export const th = {
     export: 'ส่งออก', today: 'วันนี้', details: 'รายละเอียด', reason: 'เหตุผล', type: 'ประเภท', create: 'สร้าง', last30: '30 วันล่าสุด',
   },
   nav: {
-    pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', kitchen: 'ครัว', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
+    pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
     ingredients: 'วัตถุดิบ', recipes: 'สูตร', inventory: 'สต็อก', production: 'การผลิต', suppliers: 'ซัพพลายเออร์',
     purchasing: 'สั่งซื้อ', customers: 'ลูกค้า', promotions: 'โปรโมชั่น', expenses: 'ค่าใช้จ่าย', cash: 'ลิ้นชักเงินสด',
     reports: 'รายงาน', employees: 'พนักงาน', audit: 'บันทึกการใช้งาน', settings: 'ตั้งค่า', signOut: 'ออกจากระบบ',
@@ -78,10 +78,6 @@ export const th = {
     restock: 'คืนสินค้าเข้าสต็อก (สินค้ายังขายได้)', refundMethod: 'คืนเงินด้วย', refundAmount: 'ยอดคืนโดยประมาณ',
     cogs: 'ต้นทุนขาย', grossProfit: 'กำไรขั้นต้น', receipt: 'ใบเสร็จ', taxInvoice: 'ใบกำกับภาษีอย่างย่อ', copy: 'สำเนา',
     refunds: 'ประวัติคืนเงิน',
-  },
-  kitchen: {
-    title: 'จอครัว', status: { PENDING: 'รอทำ', PREPARING: 'กำลังทำ', READY: 'พร้อมเสิร์ฟ', SERVED: 'เสิร์ฟแล้ว' },
-    start: 'เริ่มทำ', done: 'ทำเสร็จ', serve: 'เสิร์ฟแล้ว', back: 'ย้อนกลับ', minutes: 'นาที', empty: 'ว่าง', sound: 'เสียงแจ้งเตือน',
   },
   production: {
     title: 'การผลิต', newProduction: 'วางแผนผลิต', product: 'สินค้าที่ผลิต', batches: 'จำนวนชุด', planned: 'ผลผลิตตามแผน',

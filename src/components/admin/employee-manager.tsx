@@ -14,7 +14,8 @@ import { createEmployeeAction, resetPasswordAction, updateEmployeeAction } from 
 import type { AppRole } from '@/lib/database.types';
 
 export interface DirectoryEntry { id: string; user_id: string | null; display_name: string; phone: string | null; is_active: boolean; role: AppRole; email: string | null }
-const ROLES: AppRole[] = ['OWNER', 'MANAGER', 'CASHIER', 'KITCHEN'];
+// KITCHEN stays valid in the database but is not offered: it has no screen without the kitchen display.
+const ROLES: AppRole[] = ['OWNER', 'MANAGER', 'CASHIER'];
 
 export function EmployeeManager({ employees, canCreate }: { employees: DirectoryEntry[]; canCreate: boolean }) {
   const { t } = useI18n();
