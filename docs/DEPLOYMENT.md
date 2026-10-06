@@ -16,6 +16,8 @@
    * `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    * `SUPABASE_SERVICE_ROLE_KEY` (server only — needed for creating staff logins)
 3. Deploy. Add the Vercel domain to Supabase Auth → URL Configuration → Site URL.
+4. Server functions run in Singapore (`sin1`, set in `vercel.json`) next to the Supabase project;
+   if the Supabase project is in another region, change `regions` to match or every page pays a cross-ocean round trip per query.
 
 ## 3. First run
 

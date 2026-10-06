@@ -17,14 +17,12 @@ export const getCurrentEmployee = cache(async (): Promise<Employee | null> => {
   const supabase = await createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
-  const { data: emp } = await supabase
-    .from('employees')
-    .select('id, display_name, role_id, is_active')
-    .eq('user_id', auth.user.id)
-    .maybeSingle();
-  if (!emp || !emp.is_active) return null;
-  const { data: role } = await supabase.rpc('current_app_role');
-  if (!role) return null;
+  // Independent lookups: run them in one round trip's time.
+  const [{ data: emp }, { data: role }] = await Promise.all([
+    supabase.from('employees').select('id, display_name, role_id, is_active').eq('user_id', auth.user.id).maybeSingle(),
+    supabase.rpc('current_app_role'),
+  ]);
+  if (!emp || !emp.is_active || !role) return null;
   return { userId: auth.user.id, employeeId: emp.id, email: auth.user.email ?? null, displayName: emp.display_name, role };
 });
 
