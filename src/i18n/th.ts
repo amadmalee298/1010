@@ -10,7 +10,7 @@ export const th = {
     status: 'สถานะ', note: 'หมายเหตุ', name: 'ชื่อ', total: 'รวม', actions: 'จัดการ', all: 'ทั้งหมด', yes: 'ใช่', no: 'ไม่',
     from: 'ตั้งแต่', to: 'ถึง', date: 'วันที่', quantity: 'จำนวน', price: 'ราคา', cost: 'ต้นทุน', unit: 'หน่วย',
     saved: 'บันทึกแล้ว', error: 'เกิดข้อผิดพลาด', required: 'จำเป็นต้องกรอก', optional: 'ไม่บังคับ', print: 'พิมพ์',
-    export: 'ส่งออก', today: 'วันนี้', details: 'รายละเอียด', reason: 'เหตุผล', type: 'ประเภท', create: 'สร้าง',
+    export: 'ส่งออก', today: 'วันนี้', details: 'รายละเอียด', reason: 'เหตุผล', type: 'ประเภท', create: 'สร้าง', last30: '30 วันล่าสุด',
   },
   nav: {
     pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', kitchen: 'ครัว', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
@@ -109,6 +109,33 @@ export const th = {
   expenses: {
     title: 'ค่าใช้จ่าย', newExpense: 'บันทึกค่าใช้จ่าย', category: 'หมวด', description: 'รายละเอียด', amount: 'จำนวนเงิน',
     method: 'ชำระโดย', fromDrawer: 'จ่ายจากลิ้นชักเงินสด', void: 'ยกเลิกรายการ', voided: 'ยกเลิกแล้ว', total: 'รวมค่าใช้จ่าย',
+  },
+  reports: {
+    title: 'รายงาน', dashboard: 'ภาพรวมวันนี้', exportCsv: 'ส่งออก CSV', range: 'ช่วงวันที่',
+    types: {
+      sales: 'ยอดขาย', products: 'สินค้า', inventory: 'สต็อก', purchases: 'การซื้อ', production: 'การผลิต', expenses: 'ค่าใช้จ่าย',
+      cogs: 'ต้นทุนขาย (COGS)', pnl: 'กำไรขาดทุน', menu: 'ความคุ้มค่าเมนู', cash: 'เงินสด', employees: 'ยอดขายพนักงาน',
+    },
+    todaySales: 'ยอดขายวันนี้', todayOrders: 'ออเดอร์วันนี้', cogs: 'ต้นทุนขาย', grossProfit: 'กำไรขั้นต้น', grossMargin: 'อัตรากำไรขั้นต้น',
+    expenses: 'ค่าใช้จ่าย', netProfit: 'กำไรสุทธิ', topProducts: 'สินค้าขายดี', lowStock: 'วัตถุดิบใกล้หมด', waste: 'ของเสีย',
+    paymentBreakdown: 'ช่องทางชำระเงิน', salesTrend: 'ยอดขายสุทธิ 14 วัน', salesByHour: 'ยอดขายตามชั่วโมง', avgTicket: 'เฉลี่ยต่อบิล',
+    grossSales: 'ยอดขายก่อนส่วนลด', discounts: 'ส่วนลด', refunds: 'คืนเงิน', vat: 'ภาษีมูลค่าเพิ่ม', netSales: 'ยอดขายสุทธิ',
+    shrinkage: 'สต็อกขาดจากการนับ', netMargin: 'อัตรากำไรสุทธิ', orders: 'ออเดอร์', quantity: 'จำนวน', share: 'สัดส่วน',
+    day: 'วันที่', hour: 'ชั่วโมง', method: 'ช่องทาง', amount: 'ยอดเงิน', supplier: 'ซัพพลายเออร์', receivedValue: 'มูลค่ารับเข้า',
+    runs: 'ครั้ง', yieldRate: 'อัตราผลผลิต', entries: 'รายการ', employee: 'พนักงาน', category: 'หมวด',
+    purchased: 'ซื้อเข้า', produced: 'ผลิตได้', sold: 'ขาย', consumed: 'ใช้ผลิต', wasted: 'เสีย', adjusted: 'ปรับยอด', returned: 'รับคืน',
+    stockValue: 'มูลค่าคงเหลือ', noSession: 'ลิ้นชักยังไม่เปิด', definitions: 'ยอดขายสุทธิไม่รวม VAT และหักคืนเงิน · ต้นทุนขายคำนวณจากต้นทุนเฉลี่ยถ่วงน้ำหนัก',
+    tableView: 'ตารางข้อมูล',
+  },
+  customers: {
+    title: 'ลูกค้า', newCustomer: 'เพิ่มลูกค้า', editCustomer: 'แก้ไขลูกค้า', phone: 'เบอร์โทร', email: 'อีเมล', birthday: 'วันเกิด',
+    points: 'แต้ม', totalSpent: 'ยอดซื้อสะสม', visits: 'จำนวนครั้ง', history: 'ประวัติแต้ม', adjustPoints: 'ปรับแต้ม',
+    change: 'เพิ่ม/ลด (+/-)', reason: { EARN: 'ได้รับ', REDEEM: 'แลก', ADJUST: 'ปรับ', REVERSAL: 'คืน' },
+  },
+  promotions: {
+    title: 'โปรโมชั่น', newPromotion: 'เพิ่มโปรโมชั่น', editPromotion: 'แก้ไขโปรโมชั่น', code: 'โค้ด (ไม่บังคับ)',
+    type: 'ประเภท', percent: 'ลดเป็น %', fixed: 'ลดเป็นบาท', value: 'มูลค่า', minSubtotal: 'ยอดขั้นต่ำ', maxDiscount: 'ลดสูงสุด (ไม่ใส่ = ไม่จำกัด)',
+    membersOnly: 'เฉพาะสมาชิก', startsAt: 'เริ่ม', endsAt: 'สิ้นสุด',
   },
   errors: {
     generic: 'เกิดข้อผิดพลาด กรุณาลองใหม่', permission: 'ไม่มีสิทธิ์ทำรายการนี้', validation: 'ข้อมูลไม่ถูกต้อง',

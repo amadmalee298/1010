@@ -8,7 +8,7 @@ export const en: Dictionary = {
     status: 'Status', note: 'Note', name: 'Name', total: 'Total', actions: 'Actions', all: 'All', yes: 'Yes', no: 'No',
     from: 'From', to: 'To', date: 'Date', quantity: 'Quantity', price: 'Price', cost: 'Cost', unit: 'Unit',
     saved: 'Saved', error: 'Error', required: 'Required', optional: 'Optional', print: 'Print',
-    export: 'Export', today: 'Today', details: 'Details', reason: 'Reason', type: 'Type', create: 'Create',
+    export: 'Export', today: 'Today', details: 'Details', reason: 'Reason', type: 'Type', create: 'Create', last30: 'Last 30 days',
   },
   nav: {
     pos: 'POS', orders: 'Orders', kitchen: 'Kitchen', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
@@ -107,6 +107,33 @@ export const en: Dictionary = {
   expenses: {
     title: 'Expenses', newExpense: 'Record expense', category: 'Category', description: 'Description', amount: 'Amount',
     method: 'Paid by', fromDrawer: 'Paid from cash drawer', void: 'Void', voided: 'Voided', total: 'Total expenses',
+  },
+  reports: {
+    title: 'Reports', dashboard: 'Today', exportCsv: 'Export CSV', range: 'Date range',
+    types: {
+      sales: 'Sales', products: 'Products', inventory: 'Inventory', purchases: 'Purchases', production: 'Production', expenses: 'Expenses',
+      cogs: 'COGS', pnl: 'Profit & Loss', menu: 'Menu profitability', cash: 'Cash', employees: 'Employee sales',
+    },
+    todaySales: "Today's sales", todayOrders: "Today's orders", cogs: 'COGS', grossProfit: 'Gross profit', grossMargin: 'Gross margin',
+    expenses: 'Expenses', netProfit: 'Net profit', topProducts: 'Top products', lowStock: 'Low stock', waste: 'Waste',
+    paymentBreakdown: 'Payment methods', salesTrend: 'Net sales, last 14 days', salesByHour: 'Sales by hour', avgTicket: 'Average ticket',
+    grossSales: 'Gross sales', discounts: 'Discounts', refunds: 'Refunds', vat: 'VAT', netSales: 'Net sales',
+    shrinkage: 'Stock count shrinkage', netMargin: 'Net margin', orders: 'Orders', quantity: 'Qty', share: 'Share',
+    day: 'Date', hour: 'Hour', method: 'Method', amount: 'Amount', supplier: 'Supplier', receivedValue: 'Received value',
+    runs: 'Runs', yieldRate: 'Yield', entries: 'Entries', employee: 'Employee', category: 'Category',
+    purchased: 'Purchased', produced: 'Produced', sold: 'Sold', consumed: 'Used in production', wasted: 'Wasted', adjusted: 'Adjusted', returned: 'Returned',
+    stockValue: 'Stock value', noSession: 'Drawer not open', definitions: 'Net sales exclude VAT and refunds · COGS at weighted average cost',
+    tableView: 'Data table',
+  },
+  customers: {
+    title: 'Customers', newCustomer: 'New customer', editCustomer: 'Edit customer', phone: 'Phone', email: 'Email', birthday: 'Birthday',
+    points: 'Points', totalSpent: 'Total spent', visits: 'Visits', history: 'Points history', adjustPoints: 'Adjust points',
+    change: 'Change (+/-)', reason: { EARN: 'Earned', REDEEM: 'Redeemed', ADJUST: 'Adjusted', REVERSAL: 'Reversed' },
+  },
+  promotions: {
+    title: 'Promotions', newPromotion: 'New promotion', editPromotion: 'Edit promotion', code: 'Code (optional)',
+    type: 'Type', percent: 'Percent off', fixed: 'Amount off', value: 'Value', minSubtotal: 'Minimum subtotal', maxDiscount: 'Max discount (blank = no cap)',
+    membersOnly: 'Members only', startsAt: 'Starts', endsAt: 'Ends',
   },
   errors: {
     generic: 'Something went wrong, please try again', permission: 'You are not allowed to do this', validation: 'Invalid data',

@@ -103,3 +103,15 @@ describe('cash count', () => {
     expect(countDenominations({ 500: -2, 50: 1.9 })).toBe(50);
   });
 });
+
+import { csvCell, toCsv } from '@/domain/csv';
+describe('csv', () => {
+  it('quotes, escapes and neutralises formulas', () => {
+    expect(csvCell('a,b')).toBe('"a,b"');
+    expect(csvCell('say "hi"')).toBe('"say ""hi"""');
+    expect(csvCell('=SUM(A1)')).toBe("'=SUM(A1)");
+    expect(csvCell(-5)).toBe('-5');
+    expect(csvCell(null)).toBe('');
+    expect(toCsv(['ชื่อ', 'ยอด'], [['คัสตาร์ด', 59]])).toBe('﻿ชื่อ,ยอด\r\nคัสตาร์ด,59');
+  });
+});

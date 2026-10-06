@@ -190,6 +190,22 @@ export type ProductionRequirementRow = {
   ingredient_id: Uuid; name_th: string; unit: string; required_quantity: number; stock_qty: number; shortage: number; unit_cost: number;
 };
 
+export type ProductReportRow = {
+  product_id: Uuid | null; product_name: string; category_name: string | null; quantity: number; net_sales: number;
+  cogs: number; gross_profit: number; gross_margin: number | null; share_of_sales: number | null;
+};
+export type InventoryReportRow = {
+  ingredient_id: Uuid; name_th: string; unit: string; item_type: ItemType; purchased: number; produced: number; sold: number;
+  consumed_in_production: number; wasted: number; adjusted: number; returned: number; stock_qty: number; stock_value: number;
+};
+export type PurchaseReportRow = { supplier_id: Uuid; supplier_name: string; orders: number; received_value: number };
+export type ProductionReportRow = {
+  product_id: Uuid; product_name: string; runs: number; planned_output: number; actual_output: number; total_cost: number;
+  avg_unit_cost: number | null; yield_rate: number | null;
+};
+export type ExpenseReportRow = { category: string; entries: number; amount: number };
+export type EmployeeSalesRow = { user_id: Uuid | null; employee_name: string; orders: number; net_sales: number; avg_ticket: number; refunds: number };
+
 type View<R> = { Row: R; Relationships: [] };
 
 /** Function signature helper. */
@@ -274,6 +290,17 @@ export interface Database {
       }, ExpenseRow>;
       void_expense: Fn<{ p_id: string; p_reason: string }, ExpenseRow>;
       employee_name: Fn<{ p_user_id: string }, string | null>;
+      report_sales: Fn<{ p_from: string; p_to: string }, Json>;
+      report_pnl: Fn<{ p_from: string; p_to: string }, Json>;
+      report_products: Fn<{ p_from: string; p_to: string }, ProductReportRow[]>;
+      report_inventory: Fn<{ p_from: string; p_to: string }, InventoryReportRow[]>;
+      report_purchases: Fn<{ p_from: string; p_to: string }, PurchaseReportRow[]>;
+      report_production: Fn<{ p_from: string; p_to: string }, ProductionReportRow[]>;
+      report_expenses: Fn<{ p_from: string; p_to: string }, ExpenseReportRow[]>;
+      report_cash: Fn<{ p_from: string; p_to: string }, CashSessionSummaryRow[]>;
+      report_employee_sales: Fn<{ p_from: string; p_to: string }, EmployeeSalesRow[]>;
+      dashboard: Fn<{ p_date?: string | null }, Json>;
+      adjust_customer_points: Fn<{ p_customer_id: string; p_change: number; p_note: string }, CustomerRow>;
     };
     Enums: {
       app_role: AppRole;
