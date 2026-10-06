@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Custard theme — cream base, caramel accent. Contrast checked for body text ≥ 4.5:1. */
+:root {
+  --background: #fdf9f2;
+  --foreground: #2f2219;
+  --card: #ffffff;
+  --card-foreground: #2f2219;
+  --muted: #f5ecdd;
+  --muted-foreground: #6e5a48;
+  --border: #ead9c0;
+  --input: #e3cfb2;
+  --ring: #c98a1e;
+  --primary: #b8761a;
+  --primary-foreground: #ffffff;
+  --primary-strong: #8a560c;
+  --secondary: #f3e2c4;
+  --secondary-foreground: #4a3320;
+  --success: #2f8a57;
+  --success-foreground: #ffffff;
+  --success-strong: #1f6b41;
+  --warning: #e0a43a;
+  --warning-strong: #8a5a06;
+  --destructive: #c23b3b;
+  --destructive-foreground: #ffffff;
+  --info: #2f6fbf;
+  --info-strong: #1f4f8f;
+  --radius: 0.9rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-strong: var(--primary-strong);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-strong: var(--success-strong);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-strong: var(--info-strong);
+  --font-sans: "Prompt", "Sarabun", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+}
+
+/* Receipt printing (80mm thermal) */
+@media print {
+  @page { size: 80mm auto; margin: 3mm; }
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0 auto auto 0; width: 74mm; }
+}
