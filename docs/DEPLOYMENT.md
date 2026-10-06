@@ -38,12 +38,15 @@
 ทุกขั้นทำใน Safari บน iPhone ได้ ขั้นที่ 2 (ติดตั้งฐานข้อมูล) ใช้ GitHub Actions รันแทนคอมพิวเตอร์
 
 1. **Merge PR เข้า `main` ก่อน** — ปุ่ม "Run workflow" จะแสดงเฉพาะ workflow ที่อยู่ใน branch หลัก
-2. **สร้าง Access Token ของ Supabase:** supabase.com/dashboard/account/tokens → Generate new token → คัดลอกเก็บไว้
-3. **ใส่ Secrets ใน GitHub:** repo → Settings → Secrets and variables → Actions → New repository secret ใส่ 3 ตัว:
-   * `SUPABASE_ACCESS_TOKEN` — token จากข้อ 2
-   * `SUPABASE_PROJECT_REF` — รหัสโปรเจกต์ใน URL `supabase.com/dashboard/project/<ref>`
-   * `SUPABASE_DB_PASSWORD` — รหัสผ่านฐานข้อมูลที่ตั้งตอนสร้างโปรเจกต์
+2. **คัดลอก Connection string ของ Supabase (ไม่ต้องสร้าง token):** เปิดโปรเจกต์ → ปุ่ม **Connect** ด้านบนของหน้า
+   → แท็บ **Connection String** → Type: **URI** → Method: **Session pooler** → คัดลอกข้อความที่ขึ้นต้นด้วย `postgresql://`
+   (ใช้ *Session pooler* เท่านั้น — *Direct connection* เป็น IPv6 ซึ่ง GitHub Actions เชื่อมไม่ได้)
+   ปล่อย `[YOUR-PASSWORD]` ไว้ตามเดิมได้ ระบบจะเติมรหัสผ่านให้เอง
+3. **ใส่ Secrets ใน GitHub:** repo → Settings → Secrets and variables → Actions → New repository secret ใส่ 2 ตัว:
+   * `SUPABASE_DB_URL` — connection string จากข้อ 2
+   * `SUPABASE_DB_PASSWORD` — รหัสผ่านฐานข้อมูลที่ตั้งตอนสร้างโปรเจกต์ (ลืม: Project Settings → Database → Reset database password)
    (ในเว็บ GitHub บน iPhone ถ้าไม่เห็นเมนู Settings ให้กด "aA" ในแถบที่อยู่ → ขอเว็บไซต์เดสก์ท็อป)
+   *ทางเลือก:* ถ้ามี Supabase access token อยู่แล้ว ใช้ `SUPABASE_ACCESS_TOKEN` + `SUPABASE_PROJECT_REF` + `SUPABASE_DB_PASSWORD` แทน `SUPABASE_DB_URL` ได้
 4. **ทดลองรันก่อน:** Actions → **Database migrations** → Run workflow → ปล่อยติ๊ก *Preview only* ไว้ → Run
    ดูผลว่าจะติดตั้ง 8 migration และไม่มี error
 5. **รันจริง:** Run workflow อีกครั้ง → **เอาติ๊ก Preview only ออก** → Run ขั้น "Apply migrations" ต้องเป็นเครื่องหมายถูกสีเขียว
