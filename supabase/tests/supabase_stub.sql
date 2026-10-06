@@ -1,10 +1,10 @@
 -- Minimal stand-in for the Supabase platform pieces our migrations depend on.
 -- Used ONLY by the local test harness (scripts/test-db.ts); never deployed.
-do $$ begin
-  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
-  if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
-  if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
-end $$;
+-- Roles are cluster-wide and test files create databases in parallel, so a plain
+-- "if not exists" check can race; tolerate a concurrent creation instead.
+do $$ begin create role anon nologin; exception when duplicate_object or unique_violation then null; end $$;
+do $$ begin create role authenticated nologin; exception when duplicate_object or unique_violation then null; end $$;
+do $$ begin create role service_role nologin bypassrls; exception when duplicate_object or unique_violation then null; end $$;
 
 create schema if not exists auth;
 create table if not exists auth.users (
