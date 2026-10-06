@@ -143,6 +143,7 @@ export type ExpenseRow = {
   id: Uuid; expense_date: string; category: string; description: string; amount: number;
   payment_method: PaymentMethod; supplier_id: Uuid | null; cash_session_id: Uuid | null;
   receipt_path: string | null; created_by: Uuid | null; created_at: Timestamp;
+  voided_at: Timestamp | null; void_reason: string | null;
 };
 export type AuditLogRow = {
   id: Uuid; user_id: Uuid | null; action: string; entity: string; entity_id: Uuid | null;
@@ -177,6 +178,16 @@ export type KitchenQueueRow = {
   id: Uuid; order_number: string; queue_number: number; order_type: OrderType; table_label: string | null;
   kitchen_status: KitchenStatus; note: string | null; created_at: Timestamp;
   items: { name: string; quantity: number; note: string | null }[];
+};
+
+export type CashSessionSummaryRow = {
+  id: Uuid; status: CashSessionStatus; opened_at: Timestamp; closed_at: Timestamp | null; opening_cash: number;
+  actual_cash: number | null; variance: number | null; opened_by: Uuid; closed_by: Uuid | null; note: string | null;
+  cash_sales: number; cash_refunds: number; cash_expenses: number; withdrawals: number; deposits: number;
+  expected_cash: number; total_sales: number; order_count: number; opened_by_name: string | null; closed_by_name: string | null;
+};
+export type ProductionRequirementRow = {
+  ingredient_id: Uuid; name_th: string; unit: string; required_quantity: number; stock_qty: number; shortage: number; unit_cost: number;
 };
 
 type View<R> = { Row: R; Relationships: [] };
@@ -224,6 +235,7 @@ export interface Database {
       inventory_reconciliation: View<InventoryReconciliationRow>;
       kitchen_queue: View<KitchenQueueRow>;
       product_availability: View<{ product_id: Uuid; available: number | null }>;
+      cash_session_summary: View<CashSessionSummaryRow>;
     };
     Functions: {
       current_app_role: Fn<Record<string, never>, AppRole | null>;
@@ -246,6 +258,22 @@ export interface Database {
       cancel_order: Fn<{ p_order_id: string; p_reason: string }, Json>;
       refund_order: Fn<{ p_order_id: string; p_items: Json; p_reason: string; p_method: PaymentMethod; p_restock?: boolean }, Json>;
       set_kitchen_status: Fn<{ p_order_id: string; p_status: KitchenStatus }, undefined>;
+      create_production: Fn<{ p_product_id: string; p_batches: number; p_note?: string | null }, string>;
+      production_requirements: Fn<{ p_production_id: string }, ProductionRequirementRow[]>;
+      complete_production: Fn<{ p_production_id: string; p_actual_output?: number | null }, ProductionRow>;
+      cancel_production: Fn<{ p_production_id: string }, undefined>;
+      save_purchase_order: Fn<{ p_id: string | null; p_supplier_id: string; p_items: Json; p_expected_date?: string | null; p_note?: string | null }, string>;
+      set_purchase_order_status: Fn<{ p_id: string; p_status: PurchaseStatus }, undefined>;
+      receive_purchase_order: Fn<{ p_id: string; p_items: Json; p_paid_from_drawer?: boolean }, PurchaseOrderRow>;
+      open_cash_session: Fn<{ p_opening_cash: number; p_note?: string | null }, CashSessionRow>;
+      cash_movement: Fn<{ p_type: CashTxnType; p_amount: number; p_note: string }, CashTransactionRow>;
+      close_cash_session: Fn<{ p_actual_cash: number; p_note?: string | null }, CashSessionRow>;
+      record_expense: Fn<{
+        p_expense_date: string | null; p_category: string; p_description: string; p_amount: number;
+        p_payment_method?: PaymentMethod; p_from_drawer?: boolean; p_supplier_id?: string | null; p_receipt_path?: string | null;
+      }, ExpenseRow>;
+      void_expense: Fn<{ p_id: string; p_reason: string }, ExpenseRow>;
+      employee_name: Fn<{ p_user_id: string }, string | null>;
     };
     Enums: {
       app_role: AppRole;

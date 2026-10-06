@@ -48,7 +48,7 @@ export const en: Dictionary = {
     adjust: 'Adjust', count: 'Stock count', waste: 'Waste', delta: 'Quantity change (+/-)', unitCostIn: 'Unit cost (inbound)',
     counted: 'Counted quantity', currentStock: 'System quantity', wasteReason: 'Reason (expired, spilled…)',
     integrityOk: 'Stock matches the ledger for every item', integrityBad: 'Stock does not match the ledger', balance: 'Balance after',
-    reference: 'Reference', by: 'By',
+    reference: 'Reference', by: 'By', ledger: 'Ledger check',
     txn: { PURCHASE: 'Purchase', SALE: 'Sale', PRODUCTION: 'Production', WASTE: 'Waste', ADJUSTMENT: 'Adjustment', RETURN: 'Return' },
   },
   pos: {
@@ -80,6 +80,33 @@ export const en: Dictionary = {
   kitchen: {
     title: 'Kitchen display', status: { PENDING: 'Pending', PREPARING: 'Preparing', READY: 'Ready', SERVED: 'Served' },
     start: 'Start', done: 'Done', serve: 'Served', back: 'Back', minutes: 'min', empty: 'Empty', sound: 'Sound alerts',
+  },
+  production: {
+    title: 'Production', newProduction: 'Plan production', product: 'Product', batches: 'Batches', planned: 'Planned output',
+    actual: 'Actual output', requirements: 'Required ingredients', shortage: 'Short', complete: 'Complete', cancel: 'Cancel plan',
+    totalCost: 'Total cost', unitCost: 'Unit cost', onlyFinished: 'Only finished-good products with a recipe can be produced',
+    status: { PLANNED: 'Planned', COMPLETED: 'Completed', CANCELLED: 'Cancelled' }, number: 'No.', completedNote: 'Raw materials deducted and finished stock added',
+  },
+  purchasing: {
+    suppliers: 'Suppliers', newSupplier: 'New supplier', editSupplier: 'Edit supplier', contact: 'Contact',
+    phone: 'Phone', email: 'Email', taxId: 'Tax ID', address: 'Address', orders: 'Purchase orders', newPo: 'New purchase order',
+    supplier: 'Supplier', expectedDate: 'Expected date', addLine: 'Add line', ordered: 'Ordered', received: 'Received',
+    receive: 'Receive', receiveQty: 'Receive qty', actualCost: 'Actual unit cost', paidFromDrawer: 'Paid in cash from drawer',
+    markOrdered: 'Mark ordered', cancelPo: 'Cancel PO', subtotal: 'Subtotal',
+    status: { DRAFT: 'Draft', ORDERED: 'Ordered', RECEIVED: 'Received', CANCELLED: 'Cancelled' },
+    inventoryNote: 'Receiving adds stock and updates average cost; materials reach P&L as COGS when consumed',
+  },
+  cash: {
+    title: 'Cash drawer', open: 'Open drawer', openingCash: 'Opening float', close: 'Close drawer', closeTitle: 'Closing count',
+    deposit: 'Cash in', withdrawal: 'Cash out', expected: 'Expected cash', actual: 'Counted cash', variance: 'Variance',
+    cashSales: 'Cash sales', refunds: 'Cash refunds', expenses: 'Cash expenses', withdrawals: 'Cash out', deposits: 'Cash in',
+    totalSales: 'Sales (all methods)', orders: 'Orders', history: 'Session history', openedBy: 'Opened by', closedBy: 'Closed by',
+    noSession: 'The drawer is not open', denominations: 'Count by denomination', movements: 'Drawer movements',
+    txn: { OPENING: 'Opening', SALE: 'Sale', REFUND: 'Refund', EXPENSE: 'Expense', WITHDRAWAL: 'Cash out', DEPOSIT: 'Cash in' },
+  },
+  expenses: {
+    title: 'Expenses', newExpense: 'Record expense', category: 'Category', description: 'Description', amount: 'Amount',
+    method: 'Paid by', fromDrawer: 'Paid from cash drawer', void: 'Void', voided: 'Voided', total: 'Total expenses',
   },
   errors: {
     generic: 'Something went wrong, please try again', permission: 'You are not allowed to do this', validation: 'Invalid data',

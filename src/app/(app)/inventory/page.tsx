@@ -31,7 +31,7 @@ export default async function InventoryPage() {
         {canManage ? <StatCard label={t.inventory.stockValue} value={formatTHB(value)} /> : null}
         <StatCard label={t.inventory.lowItems} value={low} tone={low ? 'destructive' : 'success'} />
         {canManage ? (
-          <StatCard label="Ledger" value={issues.length ? t.inventory.integrityBad : '✓'} hint={issues.length ? `${issues.length}` : t.inventory.integrityOk}
+          <StatCard label={t.inventory.ledger} value={issues.length ? t.inventory.integrityBad : '✓'} hint={issues.length ? `${issues.length}` : t.inventory.integrityOk}
             tone={issues.length ? 'destructive' : 'success'} />
         ) : null}
       </div>

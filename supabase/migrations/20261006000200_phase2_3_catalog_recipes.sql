@@ -156,7 +156,7 @@ select
   public.net_of_vat(p.price) as net_price,
   case p.inventory_mode
     when 'RECIPE' then rc.cost_per_selling_unit
-    when 'FINISHED_GOOD' then coalesce(nullif(fg.avg_cost, 0), rc.cost_per_selling_unit)
+    when 'FINISHED_GOOD' then coalesce(round(nullif(fg.avg_cost, 0) * coalesce(rc.units_per_sale, 1), 4), rc.cost_per_selling_unit)
     else 0
   end as unit_cost,
   rc.recipe_id,

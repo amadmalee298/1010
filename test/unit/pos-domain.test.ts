@@ -95,3 +95,11 @@ describe('cart', () => {
     expect(s.lines).toEqual([expect.objectContaining({ productId: 'a', unitPrice: 55 })]);
   });
 });
+
+import { countDenominations } from '@/domain/schemas/operations';
+describe('cash count', () => {
+  it('sums denominations and ignores invalid counts', () => {
+    expect(countDenominations({ 1000: 1, 100: 3, 20: 2, 1: 7 })).toBe(1347);
+    expect(countDenominations({ 500: -2, 50: 1.9 })).toBe(50);
+  });
+});

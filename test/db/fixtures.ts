@@ -41,8 +41,7 @@ export async function seedShop(db: TestDb, managerId: string) {
 }
 
 export async function openSession(db: TestDb, userId: string, openingCash = 1000): Promise<string> {
-  return (await db.adminOne<{ id: string }>(
-    `insert into public.cash_sessions (opening_cash, opened_by) values ($1, $2) returning id`, [openingCash, userId])).id;
+  return (await db.asOne<{ id: string }>(userId, `select id from public.open_cash_session($1, null)`, [openingCash])).id;
 }
 
 export const stockOf = async (db: TestDb, id: string) =>

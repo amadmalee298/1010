@@ -29,7 +29,11 @@ begin
   if v_mode = 'NONE' then
     return;
   elsif v_mode = 'FINISHED_GOOD' then
-    return query select i.id, p_quantity from public.ingredients i where i.product_id = p_product_id;
+    -- A sold unit may hold several produced units (e.g. a box of 4) — recipe.units_per_sale.
+    return query
+      select i.id, round(p_quantity * coalesce(
+        (select r.units_per_sale from public.recipes r where r.product_id = p_product_id and r.is_active), 1), 4)
+      from public.ingredients i where i.product_id = p_product_id;
     if not found then
       raise exception 'NOT_FOUND: finished goods item' using errcode = 'P0001';
     end if;
@@ -575,7 +579,10 @@ create view public.product_availability with (security_invoker = true) as
 select p.id as product_id,
   case p.inventory_mode
     when 'NONE' then null
-    when 'FINISHED_GOOD' then (select floor(greatest(i.stock_qty, 0)) from public.ingredients i where i.product_id = p.id)
+    when 'FINISHED_GOOD' then (
+      select floor(greatest(i.stock_qty, 0) / coalesce(
+        (select r.units_per_sale from public.recipes r where r.product_id = p.id and r.is_active), 1))
+      from public.ingredients i where i.product_id = p.id)
     else (
       select floor(min(greatest(i.stock_qty, 0) / (ri.quantity / r.yield_quantity * r.units_per_sale)))
       from public.recipes r

@@ -50,7 +50,7 @@ export const th = {
     adjust: 'ปรับยอด', count: 'นับสต็อก', waste: 'ของเสีย', delta: 'จำนวนที่เพิ่ม/ลด (+/-)', unitCostIn: 'ต้นทุนต่อหน่วย (ถ้ารับเข้า)',
     counted: 'จำนวนที่นับได้จริง', currentStock: 'คงเหลือในระบบ', wasteReason: 'สาเหตุ (เช่น หมดอายุ ทำหก)',
     integrityOk: 'สต็อกตรงกับบัญชีความเคลื่อนไหวทุกรายการ', integrityBad: 'พบสต็อกไม่ตรงกับบัญชี', balance: 'คงเหลือหลังรายการ',
-    reference: 'อ้างอิง', by: 'ผู้ทำรายการ',
+    reference: 'อ้างอิง', by: 'ผู้ทำรายการ', ledger: 'ตรวจสอบบัญชีสต็อก',
     txn: { PURCHASE: 'รับซื้อ', SALE: 'ขาย', PRODUCTION: 'ผลิต', WASTE: 'ของเสีย', ADJUSTMENT: 'ปรับยอด', RETURN: 'รับคืน' },
   },
   pos: {
@@ -82,6 +82,33 @@ export const th = {
   kitchen: {
     title: 'จอครัว', status: { PENDING: 'รอทำ', PREPARING: 'กำลังทำ', READY: 'พร้อมเสิร์ฟ', SERVED: 'เสิร์ฟแล้ว' },
     start: 'เริ่มทำ', done: 'ทำเสร็จ', serve: 'เสิร์ฟแล้ว', back: 'ย้อนกลับ', minutes: 'นาที', empty: 'ว่าง', sound: 'เสียงแจ้งเตือน',
+  },
+  production: {
+    title: 'การผลิต', newProduction: 'วางแผนผลิต', product: 'สินค้าที่ผลิต', batches: 'จำนวนชุด', planned: 'ผลผลิตตามแผน',
+    actual: 'ผลผลิตจริง', requirements: 'วัตถุดิบที่ต้องใช้', shortage: 'ขาด', complete: 'ผลิตเสร็จ', cancel: 'ยกเลิกแผน',
+    totalCost: 'ต้นทุนรวม', unitCost: 'ต้นทุน/ชิ้น', onlyFinished: 'ผลิตได้เฉพาะสินค้าแบบ "ตัดสินค้าสำเร็จรูป" ที่มีสูตรแล้ว',
+    status: { PLANNED: 'วางแผน', COMPLETED: 'ผลิตแล้ว', CANCELLED: 'ยกเลิก' }, number: 'เลขที่', completedNote: 'ตัดวัตถุดิบและเพิ่มสต็อกสำเร็จรูปแล้ว',
+  },
+  purchasing: {
+    suppliers: 'ซัพพลายเออร์', newSupplier: 'เพิ่มซัพพลายเออร์', editSupplier: 'แก้ไขซัพพลายเออร์', contact: 'ผู้ติดต่อ',
+    phone: 'โทร', email: 'อีเมล', taxId: 'เลขผู้เสียภาษี', address: 'ที่อยู่', orders: 'ใบสั่งซื้อ', newPo: 'สร้างใบสั่งซื้อ',
+    supplier: 'ซัพพลายเออร์', expectedDate: 'วันที่คาดว่าจะได้รับ', addLine: 'เพิ่มรายการ', ordered: 'สั่ง', received: 'รับแล้ว',
+    receive: 'รับของ', receiveQty: 'จำนวนรับ', actualCost: 'ราคาจริง/หน่วย', paidFromDrawer: 'จ่ายเงินสดจากลิ้นชัก',
+    markOrdered: 'ยืนยันการสั่ง', cancelPo: 'ยกเลิกใบสั่งซื้อ', subtotal: 'ยอดรวม',
+    status: { DRAFT: 'ร่าง', ORDERED: 'สั่งแล้ว', RECEIVED: 'รับครบ', CANCELLED: 'ยกเลิก' },
+    inventoryNote: 'การรับของเพิ่มสต็อกและคำนวณต้นทุนเฉลี่ยใหม่ ค่าวัตถุดิบจะเข้างบกำไรขาดทุนเป็นต้นทุนขายเมื่อถูกใช้',
+  },
+  cash: {
+    title: 'ลิ้นชักเงินสด', open: 'เปิดลิ้นชัก', openingCash: 'เงินทอนตั้งต้น', close: 'ปิดลิ้นชัก', closeTitle: 'นับเงินปิดกะ',
+    deposit: 'นำเงินเข้า', withdrawal: 'นำเงินออก', expected: 'เงินที่ควรมี', actual: 'นับได้จริง', variance: 'ส่วนต่าง',
+    cashSales: 'ขายเงินสด', refunds: 'คืนเงินสด', expenses: 'ค่าใช้จ่ายเงินสด', withdrawals: 'นำออก', deposits: 'นำเข้า',
+    totalSales: 'ยอดขายทุกช่องทาง', orders: 'บิล', history: 'ประวัติกะ', openedBy: 'เปิดโดย', closedBy: 'ปิดโดย',
+    noSession: 'ยังไม่ได้เปิดลิ้นชัก', denominations: 'นับตามชนิดธนบัตร/เหรียญ', movements: 'รายการเงินเข้า-ออก',
+    txn: { OPENING: 'ตั้งต้น', SALE: 'ขาย', REFUND: 'คืนเงิน', EXPENSE: 'ค่าใช้จ่าย', WITHDRAWAL: 'นำออก', DEPOSIT: 'นำเข้า' },
+  },
+  expenses: {
+    title: 'ค่าใช้จ่าย', newExpense: 'บันทึกค่าใช้จ่าย', category: 'หมวด', description: 'รายละเอียด', amount: 'จำนวนเงิน',
+    method: 'ชำระโดย', fromDrawer: 'จ่ายจากลิ้นชักเงินสด', void: 'ยกเลิกรายการ', voided: 'ยกเลิกแล้ว', total: 'รวมค่าใช้จ่าย',
   },
   errors: {
     generic: 'เกิดข้อผิดพลาด กรุณาลองใหม่', permission: 'ไม่มีสิทธิ์ทำรายการนี้', validation: 'ข้อมูลไม่ถูกต้อง',
