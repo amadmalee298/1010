@@ -1,0 +1,15 @@
+{
+  "name": "custard-pos",
+  "version": "1.0.0",
+  "description": "ระบบ POS ร้านขนมหวานคัสตาร์ด (Full system) — Node.js + SQLite ไม่ต้องติดตั้ง dependency",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
+    "reset-db": "node --disable-warning=ExperimentalWarning server/db.js --reset",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  },
+  "license": "MIT"
+}
