@@ -120,7 +120,7 @@ export type OrderRow = {
   manual_discount: number; points_redeemed: number; points_discount: number; vat_amount: number; total: number;
   refunded_total: number; cogs_total: number; points_earned: number; note: string | null;
   cancel_reason: string | null; created_by: Uuid | null; cancelled_by: Uuid | null; created_at: Timestamp;
-  completed_at: Timestamp; cancelled_at: Timestamp | null;
+  completed_at: Timestamp; cancelled_at: Timestamp | null; client_ref: Uuid | null; payment_summary: Json;
 };
 export type OrderItemRow = {
   id: Uuid; order_id: Uuid; product_id: Uuid | null; product_name: string; quantity: number; unit_price: number;
@@ -165,6 +165,20 @@ export type ProductCostRow = {
   finished_item_id: Uuid | null; finished_stock: number | null;
 };
 
+export type StockLevelRow = {
+  id: Uuid; name_th: string; name_en: string | null; sku: string | null; unit: string; item_type: ItemType;
+  category_id: Uuid | null; product_id: Uuid | null; stock_qty: number; avg_cost: number; reorder_level: number;
+  is_active: boolean; stock_value: number; is_low: boolean;
+};
+export type InventoryReconciliationRow = {
+  ingredient_id: Uuid; name_th: string; unit: string; stock_qty: number; ledger_qty: number; difference: number;
+};
+export type KitchenQueueRow = {
+  id: Uuid; order_number: string; queue_number: number; order_type: OrderType; table_label: string | null;
+  kitchen_status: KitchenStatus; note: string | null; created_at: Timestamp;
+  items: { name: string; quantity: number; note: string | null }[];
+};
+
 type View<R> = { Row: R; Relationships: [] };
 
 /** Function signature helper. */
@@ -206,6 +220,10 @@ export interface Database {
       recipe_item_costs: View<RecipeItemCostRow>;
       recipe_costs: View<RecipeCostRow>;
       product_costs: View<ProductCostRow>;
+      stock_levels: View<StockLevelRow>;
+      inventory_reconciliation: View<InventoryReconciliationRow>;
+      kitchen_queue: View<KitchenQueueRow>;
+      product_availability: View<{ product_id: Uuid; available: number | null }>;
     };
     Functions: {
       current_app_role: Fn<Record<string, never>, AppRole | null>;
@@ -217,6 +235,17 @@ export interface Database {
         p_units_per_sale: number; p_items: Json; p_note?: string | null;
       }, string>;
       net_of_vat: Fn<{ p_amount: number }, number>;
+      adjust_stock: Fn<{ p_ingredient_id: string; p_delta: number; p_unit_cost?: number | null; p_note?: string | null }, InventoryTransactionRow>;
+      record_stock_count: Fn<{ p_ingredient_id: string; p_counted: number; p_note?: string | null }, InventoryTransactionRow | null>;
+      record_waste: Fn<{ p_ingredient_id: string; p_quantity: number; p_reason: string }, WasteRow>;
+      check_inventory_integrity: Fn<Record<string, never>, InventoryReconciliationRow[]>;
+      current_cash_session_id: Fn<Record<string, never>, string | null>;
+      quote_order: Fn<{ p_payload: Json }, Json>;
+      create_order: Fn<{ p_payload: Json }, Json>;
+      get_order: Fn<{ p_order_id: string }, Json>;
+      cancel_order: Fn<{ p_order_id: string; p_reason: string }, Json>;
+      refund_order: Fn<{ p_order_id: string; p_items: Json; p_reason: string; p_method: PaymentMethod; p_restock?: boolean }, Json>;
+      set_kitchen_status: Fn<{ p_order_id: string; p_status: KitchenStatus }, undefined>;
     };
     Enums: {
       app_role: AppRole;
