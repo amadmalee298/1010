@@ -1,57 +1,36 @@
-# 🍮 Custard POS — ระบบ POS ร้านขนมหวานคัสตาร์ด (Full system)
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-ระบบขายหน้าร้านครบวงจรสำหรับร้านสังขยา/คัสตาร์ด/ปังสังขยา: ขาย ชำระเงิน (เงินสด/พร้อมเพย์ QR/บัตร/โอน) จอครัว จอเรียกคิว
-สต็อกวัตถุดิบตัดตามสูตร สมาชิกสะสมแต้ม โปรโมชั่น กะ/ลิ้นชักเงินสด รายงานกำไร และจัดการพนักงานตามสิทธิ์
+## Getting Started
 
-**ไม่ต้องติดตั้ง package ใด ๆ** — ใช้แค่ Node.js 22.5 ขึ้นไป (มี SQLite ในตัว)
-
-## เริ่มใช้งาน
+First, run the development server:
 
 ```bash
-npm start            # เปิดที่ http://localhost:3000
-PORT=8080 npm start  # เปลี่ยนพอร์ต
-npm test             # รัน unit + integration tests
-npm run reset-db     # ล้างฐานข้อมูลและใส่ข้อมูลตัวอย่างใหม่
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-ครั้งแรกระบบสร้าง `data/pos.db` พร้อมเมนูตัวอย่าง 17 รายการ วัตถุดิบ 16 รายการ สมาชิกและโปรโมชั่นตัวอย่าง
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-| ผู้ใช้ตัวอย่าง | PIN | หน้าที่ |
-|---|---|---|
-| เจ้าของร้าน | 1234 | ทุกอย่าง รวมพนักงานและตั้งค่า |
-| ผู้จัดการ | 2222 | เมนู สต็อก รายงาน ยกเลิกบิล |
-| แคชเชียร์ | 1111 | ขาย บิล กะ สมาชิก |
-| ครัว | 3333 | จอครัว |
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-> ⚠️ เปลี่ยน PIN ทั้งหมดที่หน้า **พนักงาน** ก่อนใช้งานจริง และตั้งเบอร์พร้อมเพย์ที่หน้า **ตั้งค่า**
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## การใช้งานในร้าน
+## Learn More
 
-- **แท็บเล็ตแคชเชียร์** → เปิด `http://<IP เครื่องเซิร์ฟเวอร์>:3000` แล้วล็อกอินแคชเชียร์
-- **จอครัว** → ล็อกอินผู้ใช้ "ครัว" (ออเดอร์ใหม่มีเสียงเตือน)
-- **ทีวีเรียกคิวหน้าร้าน** → `http://<IP>:3000/#/queue` (ไม่ต้องล็อกอิน)
-- **เครื่องพิมพ์ใบเสร็จ** → ตั้งกระดาษ 80mm ในเบราว์เซอร์ แล้วกด 🖨️ หลังชำระเงิน
-- **สำรองข้อมูล** → คัดลอกไฟล์ `data/pos.db` (ปิดเซิร์ฟเวอร์ก่อน หรือใช้ `sqlite3 data/pos.db ".backup backup.db"`)
+To learn more about Next.js, take a look at the following resources:
 
-## โครงสร้างโปรเจกต์
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-```
-server/
-  index.js       HTTP server + error handling
-  http.js        router, static files, validation helpers
-  api.js         REST API ทั้งหมด + สิทธิ์ตามตำแหน่ง
-  db.js          schema SQLite + ข้อมูลตัวอย่าง + transaction helper
-  pricing.js     ตรรกะคำนวณราคา/ส่วนลด/แต้ม/VAT (pure)
-  promptpay.js   payload QR พร้อมเพย์ (EMVCo + CRC16)
-public/
-  index.html, css/style.css
-  js/app.js      router + login
-  js/core.js     API client, UI helpers
-  js/receipt.js  ใบเสร็จ 80mm / ใบสั่งครัว
-  js/pages/      pos, orders, kitchen, shift, members, inventory, products, promotions, reports, admin
-  vendor/        qrcode-generator (MIT) สำหรับสร้าง QR แบบออฟไลน์
-test/            node:test — pricing + API integration
-docs/DESIGN.md   เอกสารออกแบบระบบ (สถาปัตยกรรม, ER, flow, API, ความปลอดภัย)
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-รายละเอียดการออกแบบทั้งหมดอยู่ที่ [docs/DESIGN.md](docs/DESIGN.md)
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

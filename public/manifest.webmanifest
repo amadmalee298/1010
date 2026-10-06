@@ -1,9 +1,0 @@
-{
-  "name": "Custard POS",
-  "short_name": "Custard POS",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#fdf8ef",
-  "theme_color": "#7a4b2a",
-  "icons": []
-}
