@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       await handleTelegramUpdate(admin, update, origin);
     } catch (err) {
       console.error('[telegram] update failed', update.update_id, err);
-      const chat = update.message?.chat.id;
+      const chat = update.message?.chat.id ?? update.callback_query?.message?.chat.id;
       if (chat) await sendMessage(chat, 'ขออภัย ระบบรับบิลขัดข้อง ลองส่งใหม่อีกครั้งครับ').catch(() => undefined);
     }
   });

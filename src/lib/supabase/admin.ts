@@ -5,7 +5,9 @@ import type { Database } from '@/lib/database.types';
 /**
  * Service-role client — bypasses RLS. Used ONLY for Auth Admin operations
  * (creating staff accounts, resetting passwords) after the caller has been
- * verified as OWNER. Never import this from client components.
+ * verified as OWNER, and for the Telegram bot's service-role-only RPCs
+ * (webhook, and bill-card notifications after a role-checked action).
+ * Never import this from client components.
  */
 export function createSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

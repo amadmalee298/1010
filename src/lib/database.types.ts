@@ -157,7 +157,8 @@ export type BillSubmissionRow = {
   approver_name: string | null; payer_signature: string | null; approver_signature: string | null;
   payer_name: string | null; voided_at: Timestamp | null; void_reason: string | null; voided_by: Uuid | null;
 };
-export type BillAttachmentRow = { id: Uuid; bill_id: Uuid; kind: 'SLIP' | 'EVIDENCE' | 'OTHER'; path: string; drive_url: string | null; uploaded_by: Uuid | null; created_at: Timestamp };
+export type AttachmentKind = 'SLIP' | 'EVIDENCE' | 'OTHER';
+export type BillAttachmentRow = { id: Uuid; bill_id: Uuid; kind: AttachmentKind; path: string; drive_url: string | null; uploaded_by: Uuid | null; created_at: Timestamp };
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
 export type AccountRow = { code: string; name_th: string; name_en: string; account_type: AccountType; is_cash: boolean; cash_flow: 'OPERATING' | 'INVESTING' | 'FINANCING'; sort_order: number };
 export type JournalEntryRow = { id: Uuid; entry_number: string; entry_date: string; memo: string; is_opening: boolean; reverses: Uuid | null; created_by: Uuid | null; created_at: Timestamp };
@@ -355,7 +356,12 @@ export interface Database {
       report_gl_pnl: Fn<{ p_from: string; p_to: string }, Json>;
       report_cash_flow: Fn<{ p_from: string; p_to: string }, Json>;
       add_bill_attachment: Fn<{ p_bill_id: string; p_kind: string; p_path: string }, BillAttachmentRow>;
-      telegram_add_attachment: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_path: string }, BillAttachmentRow>;
+      telegram_add_attachment: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_path: string; p_kind?: AttachmentKind }, BillAttachmentRow>;
+      telegram_await_upload: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_kind: AttachmentKind }, undefined>;
+      telegram_take_upload: Fn<{ p_telegram_user_id: number }, { submission_number: string; kind: AttachmentKind }[]>;
+      telegram_cancel_bill: Fn<{ p_telegram_user_id: number; p_submission_number: string }, BillSubmissionRow>;
+      bill_card: Fn<{ p_id: string }, Json>;
+      telegram_bill_card: Fn<{ p_telegram_user_id: number; p_submission_number: string }, Json>;
       set_attachment_drive_url: Fn<{ p_id: string; p_url: string | null }, undefined>;
       edit_substitute: Fn<{ p_id: string; p_bill_date: string | null; p_payer_name: string; p_approver_name: string | null; p_lines: Json }, BillSubmissionRow>;
       void_bill: Fn<{ p_id: string; p_reason: string }, BillSubmissionRow>;
