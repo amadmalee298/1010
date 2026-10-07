@@ -87,8 +87,13 @@ All three parts are optional; each one that is missing just switches that featur
 6. Corrections: an approved bill can be **voided** (stock taken back out at average cost, expense voided, drawer cash
    returned; the substitute receipt keeps its number with a ยกเลิก stamp) or its substitute receipt **edited**
    (names, date, descriptions, notes — not amounts). Real names printed on documents come from
-   พนักงาน → ชื่อ-นามสกุลจริง. Slips / purchase evidence can be attached in the bill page or by replying to the
-   bot's "รับแล้ว ✅ BL…" message with a photo.
+   พนักงาน → ชื่อ-นามสกุลจริง. Slips / purchase evidence can be attached in the bill page, or in Telegram with the
+   **📎 แนบสลิปโอน / 🧾 แนบหลักฐานการซื้อ** buttons under the bot's bill card (the next photo within 10 minutes
+   is attached), or by replying to the card with a photo. While a bill still waits for approval its submitter (or
+   a manager) can cancel it with **❌ ยกเลิกรายการ**. The bot sends the updated card to the submitter when a bill
+   is approved, rejected, voided or edited.
+   **After upgrading to this version press Settings → Telegram → ตั้งค่า Webhook once more** so Telegram also
+   delivers button presses (`callback_query`).
 7. Optional bot menu: Telegram → @BotFather → `/setcommands` → choose the bot → send:
    ```
    menu - เปิดเมนู

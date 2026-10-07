@@ -8,6 +8,8 @@ import { FRONT_OF_HOUSE, MANAGEMENT, OWNER_ONLY } from '@/domain/permissions';
 import { approveBillSchema, attachmentSchema, billIdSchema, editSubstituteSchema, rejectBillSchema, voidBillSchema } from '@/domain/schemas/bills';
 import { uuid } from '@/domain/schemas/common';
 import { fileSubstituteReceipt } from '../bills/substitute';
+import { notifySubmitter } from '../bills/telegram-card';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getBill } from '../repositories/bills';
 import { getBotUsername, setWebhook, telegramConfigured, TelegramError, webhookSecret } from '../integrations/telegram';
 import { DriveError, driveConfigured, monthFolder, uploadToDrive } from '../integrations/google-drive';
@@ -37,6 +39,7 @@ export const approveBillAction = defineAction({
         driveError = err instanceof DriveError ? err.hint : err instanceof Error ? err.message : String(err);
       }
     }
+    await notifySubmitter(createSupabaseAdminClient(), bill.id);
     return { id: bill.id, substitute_number: bill.substitute_number, driveError };
   },
 });
@@ -47,7 +50,9 @@ export const rejectBillAction = defineAction({
   revalidate: ['/bills'],
   handler: async ({ id, reason }) => {
     const db = await createSupabaseServerClient();
-    return unwrap(await db.rpc('reject_bill', { p_id: id, p_reason: reason })).id;
+    const bill = unwrap(await db.rpc('reject_bill', { p_id: id, p_reason: reason }));
+    await notifySubmitter(createSupabaseAdminClient(), bill.id);
+    return bill.id;
   },
 });
 
@@ -132,6 +137,7 @@ export const editSubstituteAction = defineAction({
     if (driveConfigured()) {
       try { await fileSubstituteReceipt(db, bill); } catch (err) { driveError = driveHint(err); }
     }
+    await notifySubmitter(createSupabaseAdminClient(), bill.id);
     return { id: bill.id, driveError };
   },
 });
@@ -142,7 +148,9 @@ export const voidBillAction = defineAction({
   revalidate: ['/bills', '/expenses', '/inventory', '/accounting'],
   handler: async ({ id, reason }) => {
     const db = await createSupabaseServerClient();
-    return unwrap(await db.rpc('void_bill', { p_id: id, p_reason: reason })).id;
+    const bill = unwrap(await db.rpc('void_bill', { p_id: id, p_reason: reason }));
+    await notifySubmitter(createSupabaseAdminClient(), bill.id);
+    return bill.id;
   },
 });
 

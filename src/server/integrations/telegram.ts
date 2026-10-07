@@ -1,4 +1,5 @@
 import 'server-only';
+import type { InlineButton } from '@/domain/telegram';
 
 /** Minimal Telegram Bot API client (only what the bill inbox needs). */
 
@@ -13,7 +14,13 @@ export interface TelegramMessage {
   document?: { file_id: string; mime_type?: string; file_size?: number };
   reply_to_message?: { message_id: number; text?: string; caption?: string };
 }
-export interface TelegramUpdate { update_id: number; message?: TelegramMessage }
+export interface TelegramCallbackQuery {
+  id: string;
+  from: { id: number; username?: string };
+  message?: { message_id: number; chat: { id: number; type: string } };
+  data?: string;
+}
+export interface TelegramUpdate { update_id: number; message?: TelegramMessage; callback_query?: TelegramCallbackQuery }
 
 /** Pasted values often carry spaces, a newline, or BotFather's "bot" prefix from a URL. */
 const token = () => (process.env.TELEGRAM_BOT_TOKEN ?? '').replace(/\s+/g, '').replace(/^bot(?=\d)/i, '');
@@ -45,13 +52,27 @@ async function call<T>(method: string, body: Record<string, unknown>): Promise<T
 }
 
 export interface ReplyKeyboard { keyboard: { text: string }[][]; resize_keyboard?: boolean; is_persistent?: boolean }
+export interface InlineKeyboard { inline_keyboard: InlineButton[][] }
 
-export async function sendMessage(chatId: number, text: string, replyTo?: number, keyboard?: ReplyKeyboard): Promise<void> {
+export async function sendMessage(chatId: number, text: string, replyTo?: number, keyboard?: ReplyKeyboard | InlineKeyboard): Promise<void> {
   await call('sendMessage', {
     chat_id: chatId, text, disable_web_page_preview: true,
     ...(replyTo ? { reply_parameters: { message_id: replyTo, allow_sending_without_reply: true } } : {}),
     ...(keyboard ? { reply_markup: keyboard } : {}),
   });
+}
+
+/** Replaces a message the bot sent (e.g. a confirm prompt) with new text and buttons. */
+export async function editMessage(chatId: number, messageId: number, text: string, keyboard?: InlineKeyboard): Promise<void> {
+  await call('editMessageText', {
+    chat_id: chatId, message_id: messageId, text, disable_web_page_preview: true,
+    reply_markup: keyboard ?? { inline_keyboard: [] },
+  });
+}
+
+/** Stops the button spinner; a short text shows as a toast on the phone. */
+export async function answerCallback(id: string, text?: string): Promise<void> {
+  await call('answerCallbackQuery', { callback_query_id: id, ...(text ? { text } : {}) }).catch(() => undefined);
 }
 
 /** Largest photo, or an image sent as a file. */
@@ -77,7 +98,7 @@ export async function downloadFile(fileId: string): Promise<Buffer> {
 }
 
 export async function setWebhook(url: string, secret: string): Promise<void> {
-  await call('setWebhook', { url, secret_token: secret, allowed_updates: ['message'], drop_pending_updates: false });
+  await call('setWebhook', { url, secret_token: secret, allowed_updates: ['message', 'callback_query'], drop_pending_updates: false });
 }
 
 export async function getBotUsername(): Promise<string | null> {
