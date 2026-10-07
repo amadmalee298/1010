@@ -6,24 +6,25 @@ import { bangkokDate } from '@/domain/datetime';
 import { getSettings } from '@/server/repositories/settings';
 import { driveConfigured, monthFolder, uploadToDrive } from '@/server/integrations/google-drive';
 
-type ApprovedLine = { description?: unknown; amount?: unknown };
+type ApprovedLine = { description?: unknown; amount?: unknown; note?: unknown };
 
 /** The substitute receipt for an approved bill that had no receipt (null otherwise). */
 export async function buildSubstituteReceipt(db: SupabaseServerClient, bill: BillSubmissionRow): Promise<SubstituteReceipt | null> {
   if (bill.status !== 'APPROVED' || !bill.substitute_number) return null;
   const s = await getSettings(db);
-  const note = bill.source === 'TELEGRAM' ? `จาก Telegram: ${bill.submitter_name}` : '';
+  // The note column carries only what someone typed for that line.
   const lines = (Array.isArray(bill.approved_lines) ? (bill.approved_lines as ApprovedLine[]) : [])
-    .map((l) => ({ description: String(l.description ?? ''), amount: Number(l.amount ?? 0), note }));
+    .map((l) => ({ description: String(l.description ?? ''), amount: Number(l.amount ?? 0), note: typeof l.note === 'string' ? l.note : '' }));
   return {
     number: bill.substitute_number,
     date: bill.bill_date ?? bangkokDate(bill.created_at),
     company: { name: s.company_name || s.shop_name, taxId: s.tax_id, address: s.shop_address, phone: s.shop_phone },
-    payer: bill.submitter_name,
+    payer: bill.payer_name || bill.submitter_name,
     lines,
     payerSignature: bill.payer_signature,
     approverSignature: bill.approver_signature,
     approverName: bill.approver_name,
+    voided: bill.voided_at !== null,
   };
 }
 

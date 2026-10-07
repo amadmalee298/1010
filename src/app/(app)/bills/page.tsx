@@ -45,6 +45,7 @@ export default async function BillsPage({ searchParams }: { searchParams: Promis
                 <TD>{b.vendor ?? b.message_text ?? '—'}</TD>
                 <TD>
                   {b.has_receipt ? <Badge variant="info">{t.bills.hasReceipt}</Badge> : <Badge variant="warning">{t.bills.noReceipt}</Badge>}
+                  {b.voided_at ? <Badge variant="destructive" className="ml-1">{t.bills.voided}</Badge> : null}
                   {b.extraction_error ? <Badge variant="destructive" className="ml-1">{t.bills.aiFailed}</Badge> : null}
                 </TD>
                 <TD className="text-right tabular-nums">{b.total !== null ? formatAmount(b.total) : '—'}</TD>

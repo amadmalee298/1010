@@ -11,6 +11,7 @@ export interface TelegramMessage {
   caption?: string;
   photo?: TelegramPhotoSize[];
   document?: { file_id: string; mime_type?: string; file_size?: number };
+  reply_to_message?: { message_id: number; text?: string; caption?: string };
 }
 export interface TelegramUpdate { update_id: number; message?: TelegramMessage }
 

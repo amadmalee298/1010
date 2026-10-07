@@ -38,7 +38,7 @@ export type RoleRow = { id: Uuid; code: AppRole; name_th: string; name_en: strin
 export type UserRow = { id: Uuid; email: string | null; created_at: Timestamp };
 export type EmployeeRow = {
   id: Uuid; user_id: Uuid | null; role_id: Uuid; display_name: string; phone: string | null;
-  is_active: boolean; created_at: Timestamp; updated_at: Timestamp;
+  is_active: boolean; created_at: Timestamp; updated_at: Timestamp; legal_name: string | null;
 };
 export type SettingRow = { id: Uuid; key: string; value: Json; updated_at: Timestamp };
 export type CategoryRow = {
@@ -155,7 +155,9 @@ export type BillSubmissionRow = {
   approved_lines: Json | null; expense_id: Uuid | null; substitute_number: string | null; substitute_url: string | null;
   created_at: Timestamp; updated_at: Timestamp; paid_method: PaymentMethod | null; paid_from_drawer: boolean | null;
   approver_name: string | null; payer_signature: string | null; approver_signature: string | null;
+  payer_name: string | null; voided_at: Timestamp | null; void_reason: string | null; voided_by: Uuid | null;
 };
+export type BillAttachmentRow = { id: Uuid; bill_id: Uuid; kind: 'SLIP' | 'EVIDENCE' | 'OTHER'; path: string; drive_url: string | null; uploaded_by: Uuid | null; created_at: Timestamp };
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
 export type AccountRow = { code: string; name_th: string; name_en: string; account_type: AccountType; is_cash: boolean; cash_flow: 'OPERATING' | 'INVESTING' | 'FINANCING'; sort_order: number };
 export type JournalEntryRow = { id: Uuid; entry_number: string; entry_date: string; memo: string; is_opening: boolean; reverses: Uuid | null; created_by: Uuid | null; created_at: Timestamp };
@@ -266,6 +268,7 @@ export interface Database {
       accounts: Table<AccountRow, 'code' | 'name_th' | 'name_en' | 'account_type'>;
       journal_entries: Table<JournalEntryRow, 'entry_number' | 'entry_date' | 'memo'>;
       journal_lines: Table<JournalLineRow, 'entry_id' | 'account_code'>;
+      bill_attachments: Table<BillAttachmentRow, 'bill_id' | 'kind' | 'path'>;
       employee_signatures: Table<{ employee_id: Uuid; image: string; updated_at: Timestamp }, 'employee_id' | 'image'>;
     };
     Views: {
@@ -277,7 +280,7 @@ export interface Database {
       kitchen_queue: View<KitchenQueueRow>;
       product_availability: View<{ product_id: Uuid; available: number | null }>;
       cash_session_summary: View<CashSessionSummaryRow>;
-      employee_directory: View<{ id: Uuid; user_id: Uuid | null; display_name: string; phone: string | null; is_active: boolean; created_at: Timestamp; role: AppRole; email: string | null }>;
+      employee_directory: View<{ id: Uuid; user_id: Uuid | null; display_name: string; phone: string | null; is_active: boolean; created_at: Timestamp; role: AppRole; email: string | null; legal_name: string | null }>;
     };
     Functions: {
       current_app_role: Fn<Record<string, never>, AppRole | null>;
@@ -351,6 +354,11 @@ export interface Database {
       report_balance_sheet: Fn<{ p_as_of: string }, Json>;
       report_gl_pnl: Fn<{ p_from: string; p_to: string }, Json>;
       report_cash_flow: Fn<{ p_from: string; p_to: string }, Json>;
+      add_bill_attachment: Fn<{ p_bill_id: string; p_kind: string; p_path: string }, BillAttachmentRow>;
+      telegram_add_attachment: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_path: string }, BillAttachmentRow>;
+      set_attachment_drive_url: Fn<{ p_id: string; p_url: string | null }, undefined>;
+      edit_substitute: Fn<{ p_id: string; p_bill_date: string | null; p_payer_name: string; p_approver_name: string | null; p_lines: Json }, BillSubmissionRow>;
+      void_bill: Fn<{ p_id: string; p_reason: string }, BillSubmissionRow>;
       set_bill_links: Fn<{ p_id: string; p_photo_url: string | null; p_substitute_url: string | null }, undefined>;
     };
     Enums: {

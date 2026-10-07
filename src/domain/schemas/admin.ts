@@ -8,12 +8,14 @@ export const createEmployeeSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
   password,
   display_name: requiredText(100),
+  legal_name: optionalText(150),
   role,
   phone: optionalText(30),
 });
 export const updateEmployeeSchema = z.object({
   id: uuid,
   display_name: requiredText(100),
+  legal_name: optionalText(150),
   role,
   phone: optionalText(30),
   is_active: z.preprocess((v) => v === true || v === 'on', z.boolean()),

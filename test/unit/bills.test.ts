@@ -72,3 +72,13 @@ describe('substituteReceiptHtml signatures', () => {
     expect(html).toContain('(..............................)');
   });
 });
+
+describe('substituteReceiptHtml voided', () => {
+  it('stamps cancelled documents', () => {
+    const html = substituteReceiptHtml({
+      number: '2569/10-003', date: '2026-10-07', payer: 'a', voided: true,
+      company: { name: 'x', taxId: '', address: '', phone: '' }, lines: [{ description: 'y', amount: 1, note: '' }],
+    });
+    expect(html).toContain('<div class="void">ยกเลิก</div>');
+  });
+});

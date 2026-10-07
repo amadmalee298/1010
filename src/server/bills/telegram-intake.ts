@@ -70,6 +70,11 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
   if (existing) return;
 
   const image = pickImage(m);
+
+  // A photo sent as a reply to "รับแล้ว ✅ BL…" is evidence for that bill (slip, receipt, goods).
+  const replyNumber = (m.reply_to_message?.text ?? m.reply_to_message?.caption ?? '').match(/BL\d{6}-\d{4}/)?.[0];
+  if (image && replyNumber) return attachToBill(admin, update.update_id, m.from.id, replyNumber, image, reply);
+
   if (!image && (!text || text.startsWith('/'))) return reply(HELP);
 
   const hints = await ingredientHints(admin);
@@ -130,6 +135,32 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
       await admin.from('bill_submissions').update({ photo_url: url }).eq('id', bill.id);
     } catch (err) {
       console.error('[telegram] drive upload failed', err);
+    }
+  }
+}
+
+async function attachToBill(
+  admin: Admin, updateId: number, telegramUserId: number, submissionNumber: string,
+  image: { fileId: string; mime: string }, reply: (msg: string) => Promise<void>,
+): Promise<void> {
+  const data = await downloadFile(image.fileId);
+  const ext = image.mime.split('/')[1] ?? 'jpg';
+  const path = `bills/${bangkokDate().slice(0, 7)}/${submissionNumber}-att-${updateId}.${ext}`;
+  const { error: upErr } = await admin.storage.from('expense-receipts').upload(path, data, { contentType: image.mime, upsert: true });
+  if (upErr) throw new Error(`storage upload: ${upErr.message}`);
+  const { data: row, error } = await admin.rpc('telegram_add_attachment', {
+    p_telegram_user_id: telegramUserId, p_submission_number: submissionNumber, p_path: path,
+  });
+  if (error || !row) return reply(`แนบรูปไม่ได้: ไม่พบ ${submissionNumber} หรือคุณไม่ใช่ผู้ส่งบิลนี้`);
+  await reply(`แนบรูปกับ ${submissionNumber} แล้ว ✅`);
+  if (driveConfigured()) {
+    try {
+      const url = await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], {
+        kind: 'file', name: `${submissionNumber} หลักฐาน ${updateId}.${ext}`, mimeType: image.mime, data,
+      });
+      await admin.rpc('set_attachment_drive_url', { p_id: row.id, p_url: url });
+    } catch (err) {
+      console.error('[telegram] attachment drive upload failed', err);
     }
   }
 }

@@ -29,6 +29,7 @@ export const createEmployeeAction = defineAction({
     const db = await createSupabaseServerClient();   // employee row is written as the owner, through RLS + audit trigger
     const { error } = await db.from('employees').insert({
       user_id: created.data.user.id, role_id: await roleId(input.role), display_name: input.display_name, phone: input.phone ?? null,
+      legal_name: input.legal_name ?? null,
     });
     if (error) {
       await admin.auth.admin.deleteUser(created.data.user.id);   // don't leave an orphan login behind
@@ -45,7 +46,7 @@ export const updateEmployeeAction = defineAction({
   handler: async (input) => {
     const db = await createSupabaseServerClient();
     return unwrap(await db.from('employees').update({
-      display_name: input.display_name, role_id: await roleId(input.role), phone: input.phone ?? null, is_active: input.is_active,
+      display_name: input.display_name, legal_name: input.legal_name ?? null, role_id: await roleId(input.role), phone: input.phone ?? null, is_active: input.is_active,
     }).eq('id', input.id).select().single());
   },
 });

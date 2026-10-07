@@ -84,7 +84,12 @@ All three parts are optional; each one that is missing just switches that featur
    → Deploy → New deployment → Web app (*Execute as: Me*, *Who has access: Anyone*) → copy the URL.
    Files go to My Drive / Custard POS / `<ปี พ.ศ.-เดือน>` / รูปบิล and ใบรับรองแทนใบเสร็จ.
 5. Settings → shop info: fill **ชื่อนิติบุคคลบนเอกสาร**, tax ID, address and phone — they print on the substitute receipt.
-6. Optional bot menu: Telegram → @BotFather → `/setcommands` → choose the bot → send:
+6. Corrections: an approved bill can be **voided** (stock taken back out at average cost, expense voided, drawer cash
+   returned; the substitute receipt keeps its number with a ยกเลิก stamp) or its substitute receipt **edited**
+   (names, date, descriptions, notes — not amounts). Real names printed on documents come from
+   พนักงาน → ชื่อ-นามสกุลจริง. Slips / purchase evidence can be attached in the bill page or by replying to the
+   bot's "รับแล้ว ✅ BL…" message with a photo.
+7. Optional bot menu: Telegram → @BotFather → `/setcommands` → choose the bot → send:
    ```
    menu - เปิดเมนู
    jot - พิมพ์จดรายรับ-รายจ่าย

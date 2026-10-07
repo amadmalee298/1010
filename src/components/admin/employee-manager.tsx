@@ -13,7 +13,7 @@ import { formToObject } from '@/lib/form';
 import { createEmployeeAction, resetPasswordAction, updateEmployeeAction } from '@/server/actions/admin';
 import type { AppRole } from '@/lib/database.types';
 
-export interface DirectoryEntry { id: string; user_id: string | null; display_name: string; phone: string | null; is_active: boolean; role: AppRole; email: string | null }
+export interface DirectoryEntry { id: string; user_id: string | null; display_name: string; legal_name: string | null; phone: string | null; is_active: boolean; role: AppRole; email: string | null }
 // KITCHEN stays valid in the database but is not offered: it has no screen without the kitchen display.
 const ROLES: AppRole[] = ['OWNER', 'MANAGER', 'CASHIER'];
 
@@ -36,7 +36,7 @@ export function EmployeeManager({ employees, canCreate }: { employees: Directory
         <TBody>
           {employees.map((e) => (
             <TR key={e.id} className={e.is_active ? '' : 'opacity-50'}>
-              <TD className="font-medium">{e.display_name}</TD><TD>{e.email}</TD>
+              <TD className="font-medium">{e.display_name}{e.legal_name ? <span className="block text-xs text-muted-foreground">{e.legal_name}</span> : null}</TD><TD>{e.email}</TD>
               <TD><Badge variant={e.role === 'OWNER' ? 'default' : 'secondary'}>{t.roles[e.role]}</Badge></TD>
               <TD><Badge variant={e.is_active ? 'success' : 'secondary'}>{e.is_active ? t.common.active : t.common.inactive}</Badge></TD>
               <TD className="whitespace-nowrap text-right">
@@ -55,6 +55,7 @@ export function EmployeeManager({ employees, canCreate }: { employees: Directory
               <DialogHeader><DialogTitle>{A.newEmployee}</DialogTitle></DialogHeader>
               <form className="grid gap-4" autoComplete="off" onSubmit={async (ev) => { ev.preventDefault(); if (await create.run(formToObject(ev.currentTarget))) setDialog(null); }}>
                 <Field label={t.common.name} error={create.fieldErrors.display_name?.[0]}><Input name="display_name" required /></Field>
+                <Field label={A.legalName}><Input name="legal_name" /></Field>
                 <Field label={A.email} error={create.fieldErrors.email?.[0]}><Input name="email" type="email" required autoComplete="off" /></Field>
                 <Field label={A.tempPassword} error={create.fieldErrors.password?.[0]}><Input name="password" type="password" minLength={8} required autoComplete="new-password" /></Field>
                 <Field label={A.role}>{roleSelect()}</Field>
@@ -67,6 +68,7 @@ export function EmployeeManager({ employees, canCreate }: { employees: Directory
               <DialogHeader><DialogTitle>{A.editEmployee}</DialogTitle></DialogHeader>
               <form className="grid gap-4" onSubmit={async (ev) => { ev.preventDefault(); if (await update.run({ ...formToObject(ev.currentTarget), id: dialog.e.id })) setDialog(null); }}>
                 <Field label={t.common.name}><Input name="display_name" defaultValue={dialog.e.display_name} required /></Field>
+                <Field label={A.legalName}><Input name="legal_name" defaultValue={dialog.e.legal_name ?? ''} /></Field>
                 <Field label={A.role}>{roleSelect(dialog.e.role)}</Field>
                 <Field label={A.phone}><Input name="phone" defaultValue={dialog.e.phone ?? ''} /></Field>
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" defaultChecked={dialog.e.is_active} className="size-5" /> {t.common.active}</label>

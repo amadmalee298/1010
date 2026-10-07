@@ -143,7 +143,12 @@ export const th = {
     approvedNote: 'อนุมัติแล้ว: วัตถุดิบเข้าสต็อกและบันทึกค่าใช้จ่ายแล้ว', substitute: 'ใบรับรองแทนใบเสร็จ',
     openDrive: 'เปิดใน Google Drive', fileToDrive: 'ส่งเข้า Google Drive', printSubstitute: 'พิมพ์ใบรับรองแทนใบเสร็จ',
     driveNotConfigured: 'ยังไม่ได้ตั้งค่า Google Drive (เอกสารยังพิมพ์จากแอปได้)', driveFailed: 'ส่งเข้า Google Drive ไม่สำเร็จ',
-    photo: 'รูปบิล', fromTelegram: 'จาก Telegram',
+    photo: 'รูปบิล', fromTelegram: 'จาก Telegram', note: 'หมายเหตุ (ไม่บังคับ)',
+    edit: 'แก้ไขใบรับรอง', editHint: 'แก้ได้เฉพาะชื่อ วันที่ รายละเอียด และหมายเหตุ ถ้ายอดเงินผิดให้ยกเลิกแล้วส่งใหม่',
+    payerName: 'ชื่อผู้เบิกจ่าย', approverName: 'ชื่อผู้อนุมัติ', voidBill: 'ยกเลิกบิล', voidReason: 'เหตุผลที่ยกเลิก',
+    voidHint: 'ระบบจะนำวัตถุดิบออกจากสต็อก ยกเลิกค่าใช้จ่าย และคืนเงินเข้าลิ้นชัก (ถ้าจ่ายจากลิ้นชัก) เลขที่เอกสารเดิมจะถูกประทับว่ายกเลิก',
+    voided: 'ยกเลิกแล้ว', attachments: 'สลิป / หลักฐานการซื้อ', addAttachment: 'แนบรูป', slip: 'สลิปโอน', evidence: 'หลักฐานการซื้อ', other: 'อื่น ๆ',
+    noAttachments: 'ยังไม่มีไฟล์แนบ · แนบจาก Telegram ได้: กด "ตอบกลับ" ข้อความยืนยันของบอทแล้วส่งรูป', uploading: 'กำลังอัปโหลด…',
   },
   accounting: {
     title: 'บัญชีและงบการเงิน', pnl: 'งบกำไรขาดทุน', balance: 'งบดุล (งบแสดงฐานะการเงิน)', cashflow: 'งบกระแสเงินสด',
@@ -175,7 +180,7 @@ export const th = {
     howTo: 'วิธีใช้: ส่งรูปบิล หรือพิมพ์ เช่น "ค่ากุ้งสด ปลาหมึก 1060" สำหรับรายการที่ไม่มีบิล',
   },
   admin: {
-    employees: 'พนักงาน', newEmployee: 'เพิ่มพนักงาน', editEmployee: 'แก้ไขพนักงาน', email: 'อีเมลเข้าระบบ', role: 'ตำแหน่ง',
+    legalName: 'ชื่อ-นามสกุลจริง (ใช้บนเอกสาร)', employees: 'พนักงาน', newEmployee: 'เพิ่มพนักงาน', editEmployee: 'แก้ไขพนักงาน', email: 'อีเมลเข้าระบบ', role: 'ตำแหน่ง',
     tempPassword: 'รหัสผ่านเริ่มต้น (อย่างน้อย 8 ตัว)', resetPassword: 'ตั้งรหัสผ่านใหม่', newPassword: 'รหัสผ่านใหม่',
     serviceKeyMissing: 'ยังไม่ได้ตั้งค่า SUPABASE_SERVICE_ROLE_KEY บนเซิร์ฟเวอร์ จึงสร้างบัญชีใหม่ไม่ได้',
     settings: 'ตั้งค่าร้าน', shop: 'ข้อมูลร้าน (แสดงบนใบเสร็จ)', shopName: 'ชื่อร้าน', address: 'ที่อยู่', phone: 'โทรศัพท์',

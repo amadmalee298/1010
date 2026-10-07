@@ -99,6 +99,8 @@ export interface SubstituteReceipt {
   payerSignature?: string | null;
   approverSignature?: string | null;
   approverName?: string | null;
+  /** Voided documents keep their number and print with a cancellation stamp. */
+  voided?: boolean;
 }
 
 const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม',
@@ -138,10 +140,11 @@ export function substituteReceiptHtml(r: SubstituteReceipt): string {
 h1{text-align:center;font-size:20px;margin:0 0 4px}.no{text-align:right;font-size:12px}.date{text-align:right}
 table{width:100%;border-collapse:collapse;margin:8px 0}th,td{border:1px solid #000;padding:4px 6px;vertical-align:top}
 th{font-size:13px}.c{text-align:center;width:48px}.r{text-align:right;width:120px}.s{font-size:12px;width:130px}
+.void{position:fixed;top:38%;left:0;right:0;text-align:center;font-size:96px;font-weight:700;color:rgba(200,0,0,.25);transform:rotate(-20deg);pointer-events:none}
 .sig{display:block;height:56px;max-width:220px;margin:0 auto;object-fit:contain}
 .sign{display:flex;justify-content:space-around;margin-top:24px;text-align:center;font-size:13px}.line{border-top:1px solid #000;width:220px;margin:0 auto 4px}
 </style></head><body>
-<h1>ใบรับรองแทน ใบเสร็จรับเงิน</h1><div class="no">เลขที่ ${esc(r.number)}</div>
+${r.voided ? '<div class="void">ยกเลิก</div>' : ''}<h1>ใบรับรองแทน ใบเสร็จรับเงิน</h1><div class="no">เลขที่ ${esc(r.number)}</div>
 <p>ผู้ซื้อ/ผู้รับบริการ: ${company}<br>เลขประจำตัวผู้เสียภาษี: ${esc(formatTaxId(r.company.taxId))}<br>ที่อยู่: ${esc(r.company.address)}<br>โทร: ${esc(r.company.phone)}</p>
 <div class="date">วันที่: ${long}</div>
 <table><thead><tr><th>ลำดับ</th><th>รายละเอียด</th><th>จำนวนเงิน (บาท)</th><th>หมายเหตุ</th></tr></thead>

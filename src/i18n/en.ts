@@ -141,7 +141,12 @@ export const en: Dictionary = {
     approvedNote: 'Approved: ingredients added to stock and expense recorded', substitute: 'Substitute receipt',
     openDrive: 'Open in Google Drive', fileToDrive: 'File to Google Drive', printSubstitute: 'Print substitute receipt',
     driveNotConfigured: 'Google Drive is not set up (the document can still be printed from the app)', driveFailed: 'Could not file to Google Drive',
-    photo: 'Bill photo', fromTelegram: 'From Telegram',
+    photo: 'Bill photo', fromTelegram: 'From Telegram', note: 'Note (optional)',
+    edit: 'Edit receipt', editHint: 'Only names, date, descriptions and notes can change; void and resubmit to change amounts',
+    payerName: 'Payer name', approverName: 'Approver name', voidBill: 'Void bill', voidReason: 'Reason',
+    voidHint: 'Stock is taken back out, the expense is voided and drawer cash returned (if paid from the drawer); the document keeps its number with a VOID stamp',
+    voided: 'Voided', attachments: 'Slips / purchase evidence', addAttachment: 'Attach photo', slip: 'Transfer slip', evidence: 'Purchase evidence', other: 'Other',
+    noAttachments: 'No attachments · In Telegram, reply to the bot\'s confirmation with a photo to attach it', uploading: 'Uploading…',
   },
   accounting: {
     title: 'Accounting', pnl: 'Profit & loss', balance: 'Balance sheet', cashflow: 'Cash flow',
@@ -173,7 +178,7 @@ export const en: Dictionary = {
     howTo: 'How to use: send a bill photo, or type e.g. "fresh shrimp, squid 1060" for an expense without a receipt',
   },
   admin: {
-    employees: 'Employees', newEmployee: 'New employee', editEmployee: 'Edit employee', email: 'Login email', role: 'Role',
+    legalName: 'Legal name (printed on documents)', employees: 'Employees', newEmployee: 'New employee', editEmployee: 'Edit employee', email: 'Login email', role: 'Role',
     tempPassword: 'Initial password (min 8 chars)', resetPassword: 'Set new password', newPassword: 'New password',
     serviceKeyMissing: 'SUPABASE_SERVICE_ROLE_KEY is not configured on the server, so new accounts cannot be created',
     settings: 'Shop settings', shop: 'Shop details (printed on receipts)', shopName: 'Shop name', address: 'Address', phone: 'Phone',
