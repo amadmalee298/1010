@@ -18,6 +18,7 @@ function doPost(e) {
     const req = JSON.parse(e.postData.contents);
     if (!SECRET || SECRET.indexOf('CHANGE-ME') === 0 || req.secret !== SECRET) return reply({ ok: false, error: 'bad secret' });
     let folder = child(DriveApp, ROOT_FOLDER);
+    if (req.action === 'folder') return reply({ ok: true, url: folder.getUrl() });
     (req.folder || []).forEach(function (name) { folder = child(folder, String(name)); });
 
     let blob;

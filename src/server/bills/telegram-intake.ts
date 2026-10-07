@@ -6,16 +6,10 @@ import { bangkokDate } from '@/domain/datetime';
 import { parseExpenseText, type BillExtraction } from '@/domain/bills';
 import { downloadFile, pickImage, sendMessage, type TelegramUpdate } from '@/server/integrations/telegram';
 import { readBill, type IngredientHint } from '@/server/integrations/bill-reader';
+import { HELP, parseCommand, runCommand } from './telegram-commands';
 import { driveConfigured, monthFolder, uploadToDrive } from '@/server/integrations/google-drive';
 
 type Admin = SupabaseClient<Database>;
-
-const HELP = [
-  'ส่งบิลได้ 2 แบบ',
-  '📷 ส่งรูปบิล/ใบเสร็จ (พิมพ์หมายเหตุใต้รูปได้)',
-  '✍️ ไม่มีบิล: พิมพ์รายการและยอด เช่น "ค่ากุ้งสด ปลาหมึก 1060"',
-  'ระบบจะส่งให้ผู้จัดการอนุมัติในแอป',
-].join('\n');
 
 async function ingredientHints(admin: Admin): Promise<IngredientHint[]> {
   const { data } = await admin.from('ingredients').select('id, name_th, unit').eq('is_active', true).eq('item_type', 'RAW').order('name_th').limit(400);
@@ -45,7 +39,7 @@ function sanitize(extraction: BillExtraction, hints: readonly IngredientHint[]):
 export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate, appOrigin: string): Promise<void> {
   const m = update.message;
   if (!m?.from || m.chat.type !== 'private') return;
-  const text = (m.text ?? m.caption ?? '').trim();
+  let text = (m.text ?? m.caption ?? '').trim();
   const reply = (msg: string) => sendMessage(m.chat.id, msg, m.message_id);
 
   // /start CODE links this Telegram account to an employee.
@@ -58,9 +52,18 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
     return reply(error ? 'รหัสเชื่อมบัญชีไม่ถูกต้องหรือหมดอายุ (ใช้ได้ 30 นาที) ขอรหัสใหม่ในแอปครับ' : `เชื่อมบัญชีกับ ${data} แล้ว ✅\n\n${HELP}`);
   }
 
-  const { data: who } = await admin.rpc('telegram_employee', { p_telegram_user_id: m.from.id });
+  const { data: who } = await admin.rpc('telegram_staff', { p_telegram_user_id: m.from.id });
   const employee = who?.[0];
   if (!employee) return reply('ยังไม่ได้เชื่อมบัญชีกับร้าน: เปิดแอป → เมนู "เชื่อม Telegram" แล้วกดลิงก์ที่ได้');
+
+  // Commands (/today, /latest, ...). "/jot <text>" continues below as a no-receipt expense.
+  const command = !pickImage(m) ? parseCommand(text) : null;
+  if (command) {
+    const jot = await runCommand(admin, employee, command,
+      { chatId: m.chat.id, telegramUserId: m.from.id, replyTo: m.message_id, appOrigin });
+    if (jot === null) return;
+    text = jot;
+  }
 
   // Telegram re-delivers updates it thinks failed; never read the same bill twice.
   const { data: existing } = await admin.from('bill_submissions').select('id').eq('telegram_update_id', update.update_id).maybeSingle();

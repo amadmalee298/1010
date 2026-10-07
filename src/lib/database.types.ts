@@ -331,6 +331,9 @@ export interface Database {
         p_payment_method?: PaymentMethod; p_from_drawer?: boolean;
       }, BillSubmissionRow>;
       reject_bill: Fn<{ p_id: string; p_reason: string }, BillSubmissionRow>;
+      telegram_staff: Fn<{ p_telegram_user_id: number }, { employee_id: Uuid; user_id: Uuid; display_name: string; role: AppRole }[]>;
+      telegram_summary: Fn<{ p_telegram_user_id: number; p_from: string; p_to: string }, Json>;
+      telegram_latest_bills: Fn<{ p_telegram_user_id: number; p_limit?: number }, BillSubmissionRow[]>;
       set_bill_links: Fn<{ p_id: string; p_photo_url: string | null; p_substitute_url: string | null }, undefined>;
     };
     Enums: {

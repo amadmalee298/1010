@@ -33,6 +33,18 @@ export async function uploadToDrive(folder: readonly string[], upload: Upload): 
   return json.url;
 }
 
+/** Link to the shop's root folder ("Custard POS") in Google Drive. */
+export async function driveFolderUrl(): Promise<string> {
+  if (!driveConfigured()) throw new Error('Google Drive is not configured');
+  const res = await fetch(scriptUrl(), {
+    method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ secret: scriptSecret(), action: 'folder' }),
+  });
+  const json = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string };
+  if (!json.ok || !json.url) throw new Error(`Google Drive script: ${json.error ?? 'update the Apps Script to the latest version'}`);
+  return json.url;
+}
+
 /** Folder for a bill date: ["2569-10"] (Buddhist-era year, like the documents). */
 export function monthFolder(isoDate: string): string[] {
   const [y, m] = isoDate.split('-');
