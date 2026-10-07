@@ -39,6 +39,14 @@ export function JournalForm({ accounts }: { accounts: AccountRow[] }) {
       </CardHeader>
       <CardContent>
         <p className="mb-3 text-sm text-muted-foreground">{A.journalHint}</p>
+        <div className="mb-4 rounded-xl border border-border bg-muted/50 p-3 text-sm">
+          <p className="font-semibold">💡 {A.drCrTitle}</p>
+          <ul className="mt-1 grid list-disc gap-1 pl-5">
+            <li>{A.drCrDebit}</li>
+            <li>{A.drCrCredit}</li>
+          </ul>
+          <p className="mt-2 text-muted-foreground">{A.drCrBalance}</p>
+        </div>
         <form className="grid gap-3" onSubmit={async (e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
