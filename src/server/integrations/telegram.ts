@@ -26,10 +26,13 @@ async function call<T>(method: string, body: Record<string, unknown>): Promise<T
   return json.result;
 }
 
-export async function sendMessage(chatId: number, text: string, replyTo?: number): Promise<void> {
+export interface ReplyKeyboard { keyboard: { text: string }[][]; resize_keyboard?: boolean; is_persistent?: boolean }
+
+export async function sendMessage(chatId: number, text: string, replyTo?: number, keyboard?: ReplyKeyboard): Promise<void> {
   await call('sendMessage', {
     chat_id: chatId, text, disable_web_page_preview: true,
     ...(replyTo ? { reply_parameters: { message_id: replyTo, allow_sending_without_reply: true } } : {}),
+    ...(keyboard ? { reply_markup: keyboard } : {}),
   });
 }
 

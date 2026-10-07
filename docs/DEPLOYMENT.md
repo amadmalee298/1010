@@ -84,6 +84,19 @@ All three parts are optional; each one that is missing just switches that featur
    → Deploy → New deployment → Web app (*Execute as: Me*, *Who has access: Anyone*) → copy the URL.
    Files go to My Drive / Custard POS / `<ปี พ.ศ.-เดือน>` / รูปบิล and ใบรับรองแทนใบเสร็จ.
 5. Settings → shop info: fill **ชื่อนิติบุคคลบนเอกสาร**, tax ID, address and phone — they print on the substitute receipt.
+6. Optional bot menu: Telegram → @BotFather → `/setcommands` → choose the bot → send:
+   ```
+   menu - เปิดเมนู
+   jot - พิมพ์จดรายรับ-รายจ่าย
+   today - สรุปวันนี้
+   month - สรุปเดือนนี้
+   latest - รายการล่าสุด
+   drive - ลิงก์ Google Drive
+   help - วิธีใช้
+   ```
+   `/today`, `/month` (P&L, same numbers as Reports) and `/drive` answer owners/managers only; `/latest` shows
+   everything to managers and only their own submissions to other staff; `/jot <รายการ ยอด>` records an expense
+   without a receipt.
 
 ## Local development
 
