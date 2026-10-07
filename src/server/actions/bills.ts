@@ -10,7 +10,7 @@ import { uuid } from '@/domain/schemas/common';
 import { fileSubstituteReceipt } from '../bills/substitute';
 import { getBill } from '../repositories/bills';
 import { getBotUsername, setWebhook, telegramConfigured } from '../integrations/telegram';
-import { driveConfigured } from '../integrations/google-drive';
+import { DriveError, driveConfigured } from '../integrations/google-drive';
 import type { Json } from '@/lib/database.types';
 
 export const approveBillAction = defineAction({
@@ -33,7 +33,7 @@ export const approveBillAction = defineAction({
       try {
         await fileSubstituteReceipt(db, bill);
       } catch (err) {
-        driveError = err instanceof Error ? err.message : String(err);
+        driveError = err instanceof DriveError ? err.hint : err instanceof Error ? err.message : String(err);
       }
     }
     return { id: bill.id, substitute_number: bill.substitute_number, driveError };
@@ -62,7 +62,7 @@ export const fileSubstituteAction = defineAction({
     try {
       return await fileSubstituteReceipt(db, bill);
     } catch (err) {
-      throw new ActionError(err instanceof Error ? err.message : String(err));
+      throw new ActionError(err instanceof DriveError ? err.hint : err instanceof Error ? err.message : String(err));
     }
   },
 });

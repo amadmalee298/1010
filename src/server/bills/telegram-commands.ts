@@ -6,7 +6,7 @@ import { parseCommand, summaryText } from '@/domain/telegram';
 export { parseCommand };
 import { bangkokDate, formatDate } from '@/domain/datetime';
 import { sendMessage, type ReplyKeyboard } from '@/server/integrations/telegram';
-import { driveConfigured, driveFolderUrl } from '@/server/integrations/google-drive';
+import { DriveError, driveConfigured, driveFolderUrl } from '@/server/integrations/google-drive';
 
 type Admin = SupabaseClient<Database>;
 export interface Staff { employee_id: string; display_name: string; role: AppRole }
@@ -88,7 +88,11 @@ export async function runCommand(
     case 'drive': {
       if (!isManager(staff)) { await managersOnly(); return null; }
       if (!driveConfigured()) { await reply('ยังไม่ได้ตั้งค่า Google Drive (ตั้งค่าใน Vercel ตามคู่มือ)'); return null; }
-      await reply(`📁 Google Drive ของร้าน\n${await driveFolderUrl()}\n(เปิดได้เฉพาะบัญชี Google เจ้าของโฟลเดอร์ หรือคนที่แชร์ให้)`);
+      try {
+        await reply(`📁 Google Drive ของร้าน\n${await driveFolderUrl()}\n(เปิดได้เฉพาะบัญชี Google เจ้าของโฟลเดอร์ หรือคนที่แชร์ให้)`);
+      } catch (err) {
+        await reply(`เปิด Google Drive ไม่ได้ ❌\n${err instanceof DriveError ? err.hint : String(err)}`);
+      }
       return null;
     }
 
