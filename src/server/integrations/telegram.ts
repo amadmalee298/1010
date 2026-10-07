@@ -14,15 +14,32 @@ export interface TelegramMessage {
 }
 export interface TelegramUpdate { update_id: number; message?: TelegramMessage }
 
-const token = () => process.env.TELEGRAM_BOT_TOKEN ?? '';
+/** Pasted values often carry spaces, a newline, or BotFather's "bot" prefix from a URL. */
+const token = () => (process.env.TELEGRAM_BOT_TOKEN ?? '').replace(/\s+/g, '').replace(/^bot(?=\d)/i, '');
+export const webhookSecret = () => (process.env.TELEGRAM_WEBHOOK_SECRET ?? '').trim();
 export const telegramConfigured = () => token().length > 0;
+/** BotFather tokens look like 8123456789:AAH…(35 characters) */
+export const tokenLooksValid = () => /^\d{5,}:[A-Za-z0-9_-]{30,}$/.test(token());
+
+export class TelegramError extends Error {
+  constructor(public readonly status: number, public readonly description: string, method: string) {
+    super(`Telegram ${method}: ${description}`);
+  }
+  /** Thai explanation with the fix. */
+  get hint(): string {
+    if (this.status === 404) return 'TELEGRAM_BOT_TOKEN ผิดรูปแบบ: คัดลอก token จาก @BotFather ใหม่ (รูปแบบ 123456789:AAH...) ไปวางใน Vercel แล้ว Redeploy';
+    if (this.status === 401) return 'TELEGRAM_BOT_TOKEN ใช้ไม่ได้ (อาจถูกเปลี่ยนใน @BotFather): ขอ token ปัจจุบันด้วย /token ใน @BotFather แล้ววางใน Vercel และ Redeploy';
+    if (/secret/i.test(this.description)) return 'TELEGRAM_WEBHOOK_SECRET ต้องเป็นอังกฤษ/ตัวเลขเท่านั้น (ใช้ _ หรือ - ได้) ยาว 16–256 ตัว แก้ใน Vercel แล้ว Redeploy';
+    return this.message;
+  }
+}
 
 async function call<T>(method: string, body: Record<string, unknown>): Promise<T> {
   const res = await fetch(`https://api.telegram.org/bot${token()}/${method}`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
   });
-  const json = (await res.json()) as { ok: boolean; result?: T; description?: string };
-  if (!json.ok || json.result === undefined) throw new Error(`Telegram ${method}: ${json.description ?? res.status}`);
+  const json = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean; result?: T; description?: string };
+  if (!json.ok || json.result === undefined) throw new TelegramError(res.status, json.description ?? String(res.status), method);
   return json.result;
 }
 

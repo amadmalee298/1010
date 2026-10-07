@@ -9,7 +9,7 @@ import { approveBillSchema, billIdSchema, rejectBillSchema } from '@/domain/sche
 import { uuid } from '@/domain/schemas/common';
 import { fileSubstituteReceipt } from '../bills/substitute';
 import { getBill } from '../repositories/bills';
-import { getBotUsername, setWebhook, telegramConfigured } from '../integrations/telegram';
+import { getBotUsername, setWebhook, telegramConfigured, TelegramError, webhookSecret } from '../integrations/telegram';
 import { DriveError, driveConfigured } from '../integrations/google-drive';
 import type { Json } from '@/lib/database.types';
 
@@ -96,7 +96,7 @@ export const setTelegramWebhookAction = defineAction({
   input: z.object({}),
   roles: OWNER_ONLY,
   handler: async () => {
-    const secret = process.env.TELEGRAM_WEBHOOK_SECRET ?? '';
+    const secret = webhookSecret();
     if (!telegramConfigured() || secret.length < 16) {
       throw new ActionError('Set TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET (16+ characters) in Vercel first');
     }
@@ -108,7 +108,7 @@ export const setTelegramWebhookAction = defineAction({
     try {
       await setWebhook(url, secret);
     } catch (err) {
-      throw new ActionError(err instanceof Error ? err.message : String(err));
+      throw new ActionError(err instanceof TelegramError ? err.hint : err instanceof Error ? err.message : String(err));
     }
     return { url, bot: await getBotUsername() };
   },

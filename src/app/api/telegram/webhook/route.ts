@@ -2,13 +2,13 @@ import { after, NextResponse, type NextRequest } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { handleTelegramUpdate } from '@/server/bills/telegram-intake';
-import { sendMessage, telegramConfigured, type TelegramUpdate } from '@/server/integrations/telegram';
+import { sendMessage, telegramConfigured, webhookSecret, type TelegramUpdate } from '@/server/integrations/telegram';
 
 // Reading a bill with the AI can take a while; the work runs after the response.
 export const maxDuration = 60;
 
 function secretMatches(header: string | null): boolean {
-  const expected = process.env.TELEGRAM_WEBHOOK_SECRET ?? '';
+  const expected = webhookSecret();
   if (!expected || !header) return false;
   const a = Buffer.from(header);
   const b = Buffer.from(expected);
