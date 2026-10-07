@@ -45,6 +45,11 @@ export function JournalForm({ accounts }: { accounts: AccountRow[] }) {
             <li>{A.drCrDebit}</li>
             <li>{A.drCrCredit}</li>
           </ul>
+          <p className="mt-2 font-semibold">⚡ {A.drCrShortTitle}</p>
+          <ul className="mt-1 grid list-disc gap-1 pl-5">
+            <li>“{A.drCrShortDebit}”</li>
+            <li>“{A.drCrShortCredit}”</li>
+          </ul>
           <p className="mt-2 text-muted-foreground">{A.drCrBalance}</p>
         </div>
         <form className="grid gap-3" onSubmit={async (e) => {
