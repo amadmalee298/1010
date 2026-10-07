@@ -13,10 +13,10 @@ export const th = {
     export: 'ส่งออก', today: 'วันนี้', details: 'รายละเอียด', reason: 'เหตุผล', type: 'ประเภท', create: 'สร้าง', last30: '30 วันล่าสุด',
   },
   nav: {
-    pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', kitchen: 'ครัว', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
+    pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
     ingredients: 'วัตถุดิบ', recipes: 'สูตร', inventory: 'สต็อก', production: 'การผลิต', suppliers: 'ซัพพลายเออร์',
     purchasing: 'สั่งซื้อ', customers: 'ลูกค้า', promotions: 'โปรโมชั่น', expenses: 'ค่าใช้จ่าย', cash: 'ลิ้นชักเงินสด',
-    reports: 'รายงาน', employees: 'พนักงาน', audit: 'บันทึกการใช้งาน', settings: 'ตั้งค่า', signOut: 'ออกจากระบบ',
+    reports: 'รายงาน', bills: 'บิลรออนุมัติ', telegram: 'เชื่อม Telegram', employees: 'พนักงาน', audit: 'บันทึกการใช้งาน', settings: 'ตั้งค่า', signOut: 'ออกจากระบบ',
     groupSales: 'การขาย', groupStock: 'สต็อกและการผลิต', groupFinance: 'การเงิน', groupAdmin: 'ผู้ดูแล',
   },
   auth: {
@@ -79,10 +79,6 @@ export const th = {
     cogs: 'ต้นทุนขาย', grossProfit: 'กำไรขั้นต้น', receipt: 'ใบเสร็จ', taxInvoice: 'ใบกำกับภาษีอย่างย่อ', copy: 'สำเนา',
     refunds: 'ประวัติคืนเงิน',
   },
-  kitchen: {
-    title: 'จอครัว', status: { PENDING: 'รอทำ', PREPARING: 'กำลังทำ', READY: 'พร้อมเสิร์ฟ', SERVED: 'เสิร์ฟแล้ว' },
-    start: 'เริ่มทำ', done: 'ทำเสร็จ', serve: 'เสิร์ฟแล้ว', back: 'ย้อนกลับ', minutes: 'นาที', empty: 'ว่าง', sound: 'เสียงแจ้งเตือน',
-  },
   production: {
     title: 'การผลิต', newProduction: 'วางแผนผลิต', product: 'สินค้าที่ผลิต', batches: 'จำนวนชุด', planned: 'ผลผลิตตามแผน',
     actual: 'ผลผลิตจริง', requirements: 'วัตถุดิบที่ต้องใช้', shortage: 'ขาด', complete: 'ผลิตเสร็จ', cancel: 'ยกเลิกแผน',
@@ -137,6 +133,25 @@ export const th = {
     type: 'ประเภท', percent: 'ลดเป็น %', fixed: 'ลดเป็นบาท', value: 'มูลค่า', minSubtotal: 'ยอดขั้นต่ำ', maxDiscount: 'ลดสูงสุด (ไม่ใส่ = ไม่จำกัด)',
     membersOnly: 'เฉพาะสมาชิก', startsAt: 'เริ่ม', endsAt: 'สิ้นสุด',
   },
+  bills: {
+    title: 'บิลรออนุมัติ', pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ', empty: 'ยังไม่มีบิล',
+    number: 'เลขที่', submittedBy: 'ผู้ส่ง', vendor: 'ร้านค้า', billDate: 'วันที่บิล', total: 'ยอดรวม', noReceipt: 'ไม่มีบิล',
+    hasReceipt: 'มีบิล', message: 'ข้อความ', aiNote: 'AI แจ้ง', aiFailed: 'อ่านบิลอัตโนมัติไม่ได้', notABill: 'รูปนี้อาจไม่ใช่บิล',
+    lines: 'รายการ', description: 'รายละเอียด', amount: 'จำนวนเงิน', ingredient: 'เข้าสต็อกเป็น', notStock: '— ค่าใช้จ่าย (ไม่เข้าสต็อก) —',
+    qtyInUnit: 'จำนวน (หน่วยวัตถุดิบ)', onBill: 'บนบิล', addLine: 'เพิ่มรายการ', category: 'หมวดค่าใช้จ่าย (รายการที่ไม่เข้าสต็อก)',
+    approve: 'อนุมัติ', reject: 'ไม่อนุมัติ', rejectReason: 'เหตุผล', stockPart: 'เข้าสต็อก', expensePart: 'ค่าใช้จ่าย',
+    approvedNote: 'อนุมัติแล้ว: วัตถุดิบเข้าสต็อกและบันทึกค่าใช้จ่ายแล้ว', substitute: 'ใบรับรองแทนใบเสร็จ',
+    openDrive: 'เปิดใน Google Drive', fileToDrive: 'ส่งเข้า Google Drive', printSubstitute: 'พิมพ์ใบรับรองแทนใบเสร็จ',
+    driveNotConfigured: 'ยังไม่ได้ตั้งค่า Google Drive (เอกสารยังพิมพ์จากแอปได้)', driveFailed: 'ส่งเข้า Google Drive ไม่สำเร็จ',
+    photo: 'รูปบิล', fromTelegram: 'จาก Telegram',
+  },
+  telegram: {
+    title: 'เชื่อม Telegram', intro: 'ส่งรูปบิลหรือพิมพ์ค่าใช้จ่ายที่ไม่มีบิลผ่าน Telegram แล้วระบบจะส่งให้ผู้จัดการอนุมัติ',
+    linked: 'เชื่อมแล้วกับ', notLinked: 'ยังไม่ได้เชื่อม', getLink: 'สร้างลิงก์เชื่อมบัญชี', openBot: 'เปิด Telegram เพื่อเชื่อม',
+    codeHint: 'ลิงก์ใช้ได้ 30 นาที ถ้าเปิดลิงก์ไม่ได้ ให้ส่งข้อความนี้ถึงบอท:', unlink: 'ยกเลิกการเชื่อม',
+    notConfigured: 'ยังไม่ได้ตั้งค่าบอท Telegram (เจ้าของร้านตั้งค่าในหน้า ตั้งค่าร้าน)',
+    howTo: 'วิธีใช้: ส่งรูปบิล หรือพิมพ์ เช่น "ค่ากุ้งสด ปลาหมึก 1060" สำหรับรายการที่ไม่มีบิล',
+  },
   admin: {
     employees: 'พนักงาน', newEmployee: 'เพิ่มพนักงาน', editEmployee: 'แก้ไขพนักงาน', email: 'อีเมลเข้าระบบ', role: 'ตำแหน่ง',
     tempPassword: 'รหัสผ่านเริ่มต้น (อย่างน้อย 8 ตัว)', resetPassword: 'ตั้งรหัสผ่านใหม่', newPassword: 'รหัสผ่านใหม่',
@@ -146,6 +161,8 @@ export const th = {
     vatInclusive: 'ราคาขายรวม VAT แล้ว', payments: 'การชำระเงิน', promptpay: 'พร้อมเพย์ (เบอร์มือถือ / เลข 13 หลัก)',
     maxCashierDiscount: 'ส่วนลดสูงสุดที่แคชเชียร์ให้ได้ (บาท)', loyalty: 'สะสมแต้ม', bahtPerPoint: 'ซื้อกี่บาทได้ 1 แต้ม',
     pointValue: '1 แต้มมีค่า (บาท)', minRedeem: 'แลกขั้นต่ำ (แต้ม)', language: 'ภาษา',
+    companyName: 'ชื่อนิติบุคคลบนเอกสาร (เว้นว่าง = ใช้ชื่อร้าน)', integrations: 'การเชื่อมต่อ (Telegram / AI / Google Drive)',
+    connected: 'พร้อมใช้', missing: 'ยังไม่ได้ตั้งค่า', setWebhook: 'เชื่อมบอท Telegram กับแอปนี้', webhookSet: 'เชื่อมบอทแล้ว',
     audit: 'บันทึกการใช้งาน', action: 'การกระทำ', entity: 'ข้อมูล', changes: 'การเปลี่ยนแปลง', user: 'ผู้ใช้', allEntities: 'ทุกประเภท',
   },
   errors: {

@@ -33,7 +33,6 @@ export const refundOrderSchema = z.object({
   restock: z.boolean().default(false),
   items: z.array(z.object({ order_item_id: uuid, quantity: z.coerce.number().int().min(1) })).min(1),
 });
-export const kitchenStatusSchema = z.object({ order_id: uuid, status: z.enum(['PENDING', 'PREPARING', 'READY', 'SERVED']) });
 
 export const stockAdjustSchema = z.object({ ingredient_id: uuid, delta: z.coerce.number().finite().refine((v) => v !== 0), unit_cost: money.optional(), note: requiredText(300) });
 export const stockCountSchema = z.object({ ingredient_id: uuid, counted: z.coerce.number().finite().min(0), note: optionalText(300) });

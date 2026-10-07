@@ -11,10 +11,10 @@ export const en: Dictionary = {
     export: 'Export', today: 'Today', details: 'Details', reason: 'Reason', type: 'Type', create: 'Create', last30: 'Last 30 days',
   },
   nav: {
-    pos: 'POS', orders: 'Orders', kitchen: 'Kitchen', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
+    pos: 'POS', orders: 'Orders', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
     ingredients: 'Ingredients', recipes: 'Recipes', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
     purchasing: 'Purchasing', customers: 'Customers', promotions: 'Promotions', expenses: 'Expenses', cash: 'Cash drawer',
-    reports: 'Reports', employees: 'Employees', audit: 'Audit log', settings: 'Settings', signOut: 'Sign out',
+    reports: 'Reports', bills: 'Bill inbox', telegram: 'Link Telegram', employees: 'Employees', audit: 'Audit log', settings: 'Settings', signOut: 'Sign out',
     groupSales: 'Sales', groupStock: 'Stock & production', groupFinance: 'Finance', groupAdmin: 'Admin',
   },
   auth: {
@@ -77,10 +77,6 @@ export const en: Dictionary = {
     cogs: 'COGS', grossProfit: 'Gross profit', receipt: 'Receipt', taxInvoice: 'Abbreviated tax invoice', copy: 'Copy',
     refunds: 'Refund history',
   },
-  kitchen: {
-    title: 'Kitchen display', status: { PENDING: 'Pending', PREPARING: 'Preparing', READY: 'Ready', SERVED: 'Served' },
-    start: 'Start', done: 'Done', serve: 'Served', back: 'Back', minutes: 'min', empty: 'Empty', sound: 'Sound alerts',
-  },
   production: {
     title: 'Production', newProduction: 'Plan production', product: 'Product', batches: 'Batches', planned: 'Planned output',
     actual: 'Actual output', requirements: 'Required ingredients', shortage: 'Short', complete: 'Complete', cancel: 'Cancel plan',
@@ -135,6 +131,25 @@ export const en: Dictionary = {
     type: 'Type', percent: 'Percent off', fixed: 'Amount off', value: 'Value', minSubtotal: 'Minimum subtotal', maxDiscount: 'Max discount (blank = no cap)',
     membersOnly: 'Members only', startsAt: 'Starts', endsAt: 'Ends',
   },
+  bills: {
+    title: 'Bill inbox', pending: 'Pending', approved: 'Approved', rejected: 'Rejected', empty: 'No bills yet',
+    number: 'No.', submittedBy: 'Sent by', vendor: 'Vendor', billDate: 'Bill date', total: 'Total', noReceipt: 'No receipt',
+    hasReceipt: 'Receipt', message: 'Message', aiNote: 'AI note', aiFailed: 'Could not read the bill automatically', notABill: 'This may not be a bill',
+    lines: 'Lines', description: 'Description', amount: 'Amount', ingredient: 'Add to stock as', notStock: '— Expense (not stock) —',
+    qtyInUnit: 'Quantity (ingredient unit)', onBill: 'On bill', addLine: 'Add line', category: 'Expense category (non-stock lines)',
+    approve: 'Approve', reject: 'Reject', rejectReason: 'Reason', stockPart: 'To stock', expensePart: 'Expense',
+    approvedNote: 'Approved: ingredients added to stock and expense recorded', substitute: 'Substitute receipt',
+    openDrive: 'Open in Google Drive', fileToDrive: 'File to Google Drive', printSubstitute: 'Print substitute receipt',
+    driveNotConfigured: 'Google Drive is not set up (the document can still be printed from the app)', driveFailed: 'Could not file to Google Drive',
+    photo: 'Bill photo', fromTelegram: 'From Telegram',
+  },
+  telegram: {
+    title: 'Link Telegram', intro: 'Send bill photos, or type expenses that have no receipt, in Telegram; a manager approves them here',
+    linked: 'Linked to', notLinked: 'Not linked', getLink: 'Create link', openBot: 'Open Telegram to link',
+    codeHint: 'The link works for 30 minutes. If it does not open, send this to the bot:', unlink: 'Unlink',
+    notConfigured: 'The Telegram bot is not set up yet (the owner sets it up in Settings)',
+    howTo: 'How to use: send a bill photo, or type e.g. "fresh shrimp, squid 1060" for an expense without a receipt',
+  },
   admin: {
     employees: 'Employees', newEmployee: 'New employee', editEmployee: 'Edit employee', email: 'Login email', role: 'Role',
     tempPassword: 'Initial password (min 8 chars)', resetPassword: 'Set new password', newPassword: 'New password',
@@ -144,6 +159,8 @@ export const en: Dictionary = {
     vatInclusive: 'Prices include VAT', payments: 'Payments', promptpay: 'PromptPay (mobile / 13-digit ID)',
     maxCashierDiscount: 'Max cashier discount (THB)', loyalty: 'Loyalty', bahtPerPoint: 'THB spent per point',
     pointValue: 'Value of 1 point (THB)', minRedeem: 'Minimum points to redeem', language: 'Language',
+    companyName: 'Legal name on documents (blank = shop name)', integrations: 'Integrations (Telegram / AI / Google Drive)',
+    connected: 'Ready', missing: 'Not set up', setWebhook: 'Connect the Telegram bot to this app', webhookSet: 'Bot connected',
     audit: 'Audit log', action: 'Action', entity: 'Entity', changes: 'Changes', user: 'User', allEntities: 'All entities',
   },
   errors: {

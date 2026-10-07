@@ -3,9 +3,9 @@ import type { Dictionary } from '@/i18n';
 
 export type NavKey = keyof Dictionary['nav'];
 export type IconName =
-  | 'pos' | 'orders' | 'kitchen' | 'dashboard' | 'products' | 'categories' | 'ingredients' | 'recipes' | 'inventory'
+  | 'pos' | 'orders' | 'dashboard' | 'products' | 'categories' | 'ingredients' | 'recipes' | 'inventory'
   | 'production' | 'suppliers' | 'purchasing' | 'customers' | 'promotions' | 'expenses' | 'cash' | 'reports'
-  | 'employees' | 'audit' | 'settings';
+  | 'employees' | 'audit' | 'settings' | 'bills' | 'telegram';
 
 export interface NavItem { href: string; label: NavKey; icon: IconName; capability: Capability }
 export interface NavGroup { label: NavKey; items: NavItem[] }
@@ -17,7 +17,6 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { href: '/pos', label: 'pos', icon: 'pos', capability: 'sell' },
       { href: '/orders', label: 'orders', icon: 'orders', capability: 'sell' },
-      { href: '/kitchen', label: 'kitchen', icon: 'kitchen', capability: 'viewKitchen' },
       { href: '/cash', label: 'cash', icon: 'cash', capability: 'operateCashDrawer' },
       { href: '/customers', label: 'customers', icon: 'customers', capability: 'manageCustomers' },
       { href: '/promotions', label: 'promotions', icon: 'promotions', capability: 'managePromotions' },
@@ -42,6 +41,8 @@ export const NAVIGATION: NavGroup[] = [
       { href: '/dashboard', label: 'dashboard', icon: 'dashboard', capability: 'viewReports' },
       { href: '/reports', label: 'reports', icon: 'reports', capability: 'viewReports' },
       { href: '/expenses', label: 'expenses', icon: 'expenses', capability: 'recordExpense' },
+      { href: '/bills', label: 'bills', icon: 'bills', capability: 'approveBills' },
+      { href: '/telegram', label: 'telegram', icon: 'telegram', capability: 'linkTelegram' },
     ],
   },
   {

@@ -5,14 +5,25 @@
 | Capability | OWNER | MANAGER | CASHIER | KITCHEN |
 |---|:-:|:-:|:-:|:-:|
 | Sell, view orders, cash drawer, customers | ✓ | ✓ | ✓ | |
-| Kitchen display | ✓ | ✓ | ✓ | ✓ |
 | Record waste | ✓ | ✓ | ✓ | |
 | Products, categories, ingredients, recipes, costs | ✓ | ✓ | | |
 | Stock adjustments & counts, production, purchasing | ✓ | ✓ | | |
 | Cancel / refund orders, promotions, expenses, reports | ✓ | ✓ | | |
+| Approve / reject bills from Telegram (stock + expense) | ✓ | ✓ | | |
+| Link own Telegram account, send bills to the inbox | ✓ | ✓ | ✓ | |
 | Void expenses, employees, settings, audit log | ✓ | | | |
 
 The UI uses `src/domain/permissions.ts`; the database enforces the same rules independently.
+
+### Telegram bill inbox
+
+* `/api/telegram/webhook` accepts a request only when the `X-Telegram-Bot-Api-Secret-Token` header equals
+  `TELEGRAM_WEBHOOK_SECRET` (constant-time compare); it uses the service-role key server-side.
+* The webhook may only call `telegram_link_account`, `telegram_employee` and `submit_bill` (granted to
+  `service_role`, revoked from `authenticated`). A Telegram user is accepted only after redeeming a
+  single-use, 30-minute link code created by a signed-in employee; deactivated employees are ignored.
+* Nothing reaches stock or expenses until a manager approves the submission (`approve_bill`,
+  OWNER/MANAGER, one transaction, audited). AI output is a draft: unknown ingredient ids are dropped.
 
 ## Enforcement in PostgreSQL
 
