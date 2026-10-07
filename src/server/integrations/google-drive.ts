@@ -6,9 +6,39 @@ import 'server-only';
  * account — no Google Cloud project or OAuth client needed. The script converts
  * HTML to PDF itself, which renders Thai correctly.
  */
-const scriptUrl = () => process.env.GOOGLE_DRIVE_SCRIPT_URL ?? '';
-const scriptSecret = () => process.env.GOOGLE_DRIVE_SCRIPT_SECRET ?? '';
+const scriptUrl = () => (process.env.GOOGLE_DRIVE_SCRIPT_URL ?? '').trim();
+const scriptSecret = () => (process.env.GOOGLE_DRIVE_SCRIPT_SECRET ?? '').trim();
 export const driveConfigured = () => scriptUrl().length > 0 && scriptSecret().length > 0;
+
+/** Why the Apps Script call failed, in words the shop owner can act on. */
+export class DriveError extends Error {
+  constructor(public readonly reason: 'not-json' | 'bad-secret' | 'script', detail: string) {
+    super(detail);
+  }
+  /** Thai explanation with the fix. */
+  get hint(): string {
+    if (this.reason === 'not-json') return 'สคริปต์ Google ไม่ได้ตอบกลับ: ตรวจว่า Deploy แบบ Web app และ "Who has access" เป็น Anyone และ GOOGLE_DRIVE_SCRIPT_URL ลงท้ายด้วย /exec';
+    if (this.reason === 'bad-secret') return 'รหัสลับไม่ตรงกัน: SECRET ในสคริปต์ Google ต้องตรงกับ GOOGLE_DRIVE_SCRIPT_SECRET ใน Vercel (แก้สคริปต์แล้วต้อง Deploy → New version)';
+    return `สคริปต์ Google แจ้งว่า: ${this.message} (ลองวางสคริปต์เวอร์ชันล่าสุดจาก GitHub แล้ว Deploy → New version)`;
+  }
+}
+
+async function callScript(body: Record<string, unknown>): Promise<{ url: string }> {
+  // Apps Script answers POST with a redirect to the result; fetch follows it.
+  const res = await fetch(scriptUrl(), {
+    method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ secret: scriptSecret(), ...body }),
+  });
+  const text = await res.text();
+  let json: { ok?: boolean; url?: string; error?: string };
+  try {
+    json = JSON.parse(text) as typeof json;
+  } catch {
+    throw new DriveError('not-json', `Google Drive script returned non-JSON (HTTP ${res.status})`);
+  }
+  if (json.ok && json.url) return { url: json.url };
+  if (json.error === 'bad secret') throw new DriveError('bad-secret', 'bad secret');
+  throw new DriveError('script', json.error ?? 'no url returned');
+}
 
 type Upload =
   | { kind: 'file'; name: string; mimeType: string; data: Buffer }
@@ -18,31 +48,15 @@ type Upload =
 export async function uploadToDrive(folder: readonly string[], upload: Upload): Promise<string> {
   if (!driveConfigured()) throw new Error('Google Drive is not configured');
   const body = upload.kind === 'file'
-    ? { secret: scriptSecret(), folder, name: upload.name, mimeType: upload.mimeType, base64: upload.data.toString('base64') }
-    : { secret: scriptSecret(), folder, name: upload.name, html: upload.html };
-  // Apps Script answers POST with a redirect to the result; fetch follows it.
-  const res = await fetch(scriptUrl(), { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
-  const text = await res.text();
-  let json: { ok?: boolean; url?: string; error?: string };
-  try {
-    json = JSON.parse(text) as typeof json;
-  } catch {
-    throw new Error(`Google Drive script returned non-JSON (${res.status}); check the deployment access is "Anyone"`);
-  }
-  if (!json.ok || !json.url) throw new Error(`Google Drive script: ${json.error ?? 'unknown error'}`);
-  return json.url;
+    ? { folder, name: upload.name, mimeType: upload.mimeType, base64: upload.data.toString('base64') }
+    : { folder, name: upload.name, html: upload.html };
+  return (await callScript(body)).url;
 }
 
 /** Link to the shop's root folder ("Custard POS") in Google Drive. */
 export async function driveFolderUrl(): Promise<string> {
   if (!driveConfigured()) throw new Error('Google Drive is not configured');
-  const res = await fetch(scriptUrl(), {
-    method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ secret: scriptSecret(), action: 'folder' }),
-  });
-  const json = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string };
-  if (!json.ok || !json.url) throw new Error(`Google Drive script: ${json.error ?? 'update the Apps Script to the latest version'}`);
-  return json.url;
+  return (await callScript({ action: 'folder' })).url;
 }
 
 /** Folder for a bill date: ["2569-10"] (Buddhist-era year, like the documents). */
