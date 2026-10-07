@@ -52,3 +52,23 @@ describe('substituteReceiptHtml', () => {
   });
   it('formats tax ids', () => expect(formatTaxId('12')).toBe('12'));
 });
+
+describe('substituteReceiptHtml signatures', () => {
+  const base = {
+    number: '2569/10-002', date: '2026-10-07', payer: 'อาห์มัด',
+    company: { name: 'บริษัท ตัวอย่าง จำกัด', taxId: '', address: '', phone: '' },
+    lines: [{ description: 'ค่าแก๊ส', amount: 380, note: '' }],
+  };
+  it('places payer and approver signatures with the approver name', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const html = substituteReceiptHtml({ ...base, payerSignature: png, approverSignature: png, approverName: 'ผจก <b>' });
+    expect(html.match(/<img class="sig"/g)).toHaveLength(2);
+    expect(html).toContain('(ผจก &lt;b&gt;)');
+  });
+  it('leaves blank lines without signatures and ignores non-PNG data', () => {
+    const html = substituteReceiptHtml({ ...base, payerSignature: 'javascript:alert(1)' });
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('javascript');
+    expect(html).toContain('(..............................)');
+  });
+});
