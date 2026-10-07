@@ -26,6 +26,7 @@ describe('parseExpenseText', () => {
     expect(parseExpenseText('ค่ากุ้งสด ปลาหมึก 1,060')).toMatchObject({ total: 1060, lines: [{ description: 'ค่ากุ้งสด ปลาหมึก', amount: 1060 }] });
     expect(parseExpenseText('ค่าแก๊ส 380.50 บาท')?.total).toBe(380.5);
     expect(parseExpenseText('ค่าน้ำแข็ง: 40')?.lines[0]?.description).toBe('ค่าน้ำแข็ง');
+    expect(parseExpenseText('ทดสอบ  10')).toMatchObject({ is_bill: true, total: 10, lines: [{ description: 'ทดสอบ' }] });
   });
   it('returns null without an amount or description', () => {
     expect(parseExpenseText('สวัสดี')).toBeNull();

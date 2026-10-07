@@ -111,8 +111,10 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
     ingredients: hints,
   });
   let extraction: BillExtraction | null = read.ok ? sanitize(read.data, hints) : null;
-  if (!extraction && !image) extraction = parseExpenseText(text);
-  if (!image && (!extraction || !extraction.is_bill || extraction.lines.length === 0)) {
+  // Typed "รายการ ยอด" is always an expense, even when the AI doubts it (e.g. "ทดสอบ 10").
+  const usable = (e: BillExtraction | null) => Boolean(e?.is_bill && e.lines.length > 0);
+  if (!image && !usable(extraction)) extraction = parseExpenseText(text) ?? extraction;
+  if (!image && !usable(extraction)) {
     return reply(`ไม่เข้าใจรายการ ลองพิมพ์รายการตามด้วยยอดเงิน เช่น "ค่ากุ้งสด ปลาหมึก 1060"\n\n${HELP}`);
   }
 
