@@ -6,7 +6,14 @@ import 'server-only';
  * account — no Google Cloud project or OAuth client needed. The script converts
  * HTML to PDF itself, which renders Thai correctly.
  */
-const scriptUrl = () => (process.env.GOOGLE_DRIVE_SCRIPT_URL ?? '').trim();
+/** Accepts the full Web app URL or just its deployment id ("AKfy…", as Apps Script shows it). */
+export function normalizeScriptUrl(raw: string): string {
+  const v = raw.replace(/\s+/g, '');
+  if (/^AKfy[\w-]{20,}$/.test(v)) return `https://script.google.com/macros/s/${v}/exec`;
+  if (/^script\.google\.com\//.test(v)) return `https://${v}`;
+  return v;
+}
+const scriptUrl = () => normalizeScriptUrl(process.env.GOOGLE_DRIVE_SCRIPT_URL ?? '');
 const scriptSecret = () => (process.env.GOOGLE_DRIVE_SCRIPT_SECRET ?? '').trim();
 export const driveConfigured = () => scriptUrl().length > 0 && scriptSecret().length > 0;
 
@@ -25,6 +32,9 @@ export class DriveError extends Error {
 
 async function callScript(body: Record<string, unknown>): Promise<{ url: string }> {
   // Apps Script answers POST with a redirect to the result; fetch follows it.
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(scriptUrl())) {
+    throw new DriveError('not-json', 'GOOGLE_DRIVE_SCRIPT_URL is not a script.google.com Web app URL');
+  }
   const res = await fetch(scriptUrl(), {
     method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ secret: scriptSecret(), ...body }),
   });
