@@ -164,6 +164,11 @@ export const en: Dictionary = {
     addLine: 'Add line', post: 'Post', reverse: 'Reverse', reversed: 'Reversed', unbalancedLines: 'Debits must equal credits',
     journalHint: 'Use for opening balances, equipment, loans, capital, drawings, depreciation or corrections · sales, expenses and stock post automatically',
     print: 'Print', number: 'No.', noJournals: 'No entries yet', ownerOnly: 'Only the owner can post entries',
+    ledger: 'General ledger (sources)', ledgerHint: 'Tap an account in a statement to see which entries make up its amount', source: 'Source', reference: 'Reference',
+    openingRow: 'Brought forward', chooseAccount: 'Choose account', noLines: 'No entries in this period',
+    sources: { cash: 'Cash drawer', cash_close: 'Drawer close (count)', order: 'Sale', payment: 'Payment', refund: 'Refund', inventory: 'Stock',
+      expense: 'Expense', expense_void: 'Expense voided', bill_void: 'Bill voided', journal: 'Journal' },
+    cashCloseHint: 'Cash over/short comes from closing the drawer: the counted cash differed from what the system expected. If the count was entered wrongly, post a correction in the journal (Dr 1001 cash on hand / Cr 5900 cash short).',
     assumptions: 'Assumptions: QR / transfer / card = bank · cash paid outside the drawer = petty cash · positive stock adjustments = opening stock',
   },
   signature: {

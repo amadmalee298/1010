@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseServerClient } from '@/lib/supabase/server';
-import type { AccountRow, JournalEntryRow, JournalLineRow, TrialBalanceRow } from '@/lib/database.types';
+import type { AccountLedgerRow, AccountRow, JournalEntryRow, JournalLineRow, TrialBalanceRow } from '@/lib/database.types';
 import { balanceSheetSchema, cashFlowSchema, glPnlSchema, type BalanceSheet, type CashFlow, type GlPnl } from '@/domain/accounting';
 import { unwrap, unwrapMaybe } from '../db';
 
@@ -16,6 +16,11 @@ export async function cashFlow(db: SupabaseServerClient, from: string, to: strin
 export async function trialBalance(db: SupabaseServerClient, asOf: string): Promise<TrialBalanceRow[]> {
   return unwrap(await db.rpc('report_trial_balance', { p_as_of: asOf })).map((r) => ({
     ...r, debit: Number(r.debit), credit: Number(r.credit), balance: Number(r.balance),
+  }));
+}
+export async function accountLedger(db: SupabaseServerClient, account: string, from: string, to: string): Promise<AccountLedgerRow[]> {
+  return unwrap(await db.rpc('report_account_ledger', { p_account: account, p_from: from, p_to: to })).map((r) => ({
+    ...r, debit: Number(r.debit), credit: Number(r.credit), running_balance: Number(r.running_balance),
   }));
 }
 export async function listAccounts(db: SupabaseServerClient): Promise<AccountRow[]> {
