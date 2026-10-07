@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Check, CloudUpload, Plus, Trash2, X } from 'lucide-react';
+import { Ban, Check, CloudUpload, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input, NativeSelect } from '@/components/ui/input';
 import { Field } from '@/components/ui/label';
@@ -10,11 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
-import { approveBillAction, fileSubstituteAction, rejectBillAction } from '@/server/actions/bills';
+import { addAttachmentAction, approveBillAction, editSubstituteAction, fileSubstituteAction, rejectBillAction, voidBillAction } from '@/server/actions/bills';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { EXPENSE_CATEGORIES } from '@/domain/schemas/operations';
 import { formatAmount, sumBaht } from '@/domain/money';
 
-interface Line { description: string; amount: number | ''; ingredient_id: string; quantity: number | '' | null; onBill?: string }
+interface Line { description: string; amount: number | ''; ingredient_id: string; quantity: number | '' | null; onBill?: string; note?: string }
 interface IngredientOption { id: string; name: string; unit: string }
 
 export function BillReview({ billId, defaults, ingredients }: {
@@ -42,7 +43,7 @@ export function BillReview({ billId, defaults, ingredients }: {
       id: billId,
       bill_date: fd.get('bill_date'), vendor: fd.get('vendor'), category: fd.get('category'),
       payment_method: fd.get('payment_method'), from_drawer: fd.get('from_drawer') === 'on',
-      lines: lines.map((l) => ({ description: l.description, amount: l.amount, ingredient_id: l.ingredient_id, quantity: l.quantity ?? '' })),
+      lines: lines.map((l) => ({ description: l.description, amount: l.amount, ingredient_id: l.ingredient_id, quantity: l.quantity ?? '', note: l.note ?? '' })),
     });
     if (res?.driveError) toast.error(`${B.driveFailed}: ${res.driveError}`);
     if (res) router.refresh();
@@ -75,6 +76,9 @@ export function BillReview({ billId, defaults, ingredients }: {
                     <option value="">{B.notStock}</option>
                     {ingredients.map((g) => <option key={g.id} value={g.id}>{g.name} ({g.unit})</option>)}
                   </NativeSelect>
+                </Field>
+                <Field label={B.note} className="sm:col-span-3">
+                  <Input value={l.note ?? ''} onChange={(e) => set(i, { note: e.target.value })} />
                 </Field>
                 {l.ingredient_id ? (
                   <Field label={`${B.qtyInUnit}: ${unitOf.get(l.ingredient_id) ?? ''}`}>
@@ -140,5 +144,121 @@ export function FileSubstituteButton({ billId }: { billId: string }) {
     <Button variant="outline" disabled={file.pending} onClick={() => void file.run({ id: billId })}>
       <CloudUpload /> {t.bills.fileToDrive}
     </Button>
+  );
+}
+
+interface DocLine { description: string; note: string; amount: number }
+
+export function EditSubstituteButton({ billId, defaults }: {
+  billId: string;
+  defaults: { bill_date: string; payer_name: string; approver_name: string; lines: DocLine[] };
+}) {
+  const { t } = useI18n();
+  const B = t.bills;
+  const [open, setOpen] = useState(false);
+  const [lines, setLines] = useState<DocLine[]>(defaults.lines);
+  const save = useAction(editSubstituteAction);
+  return (
+    <>
+      <Button variant="outline" onClick={() => { setLines(defaults.lines); setOpen(true); }}><Pencil /> {B.edit}</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{B.edit}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{B.editHint}</p>
+          <form className="grid gap-3" onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const res = await save.run({
+              id: billId, bill_date: fd.get('bill_date'), payer_name: fd.get('payer_name'), approver_name: fd.get('approver_name'),
+              lines: lines.map((l) => ({ description: l.description, note: l.note })),
+            });
+            if (res?.driveError) toast.error(`${B.driveFailed}: ${res.driveError}`);
+            if (res) setOpen(false);
+          }}>
+            <Field label={B.billDate}><Input type="date" name="bill_date" defaultValue={defaults.bill_date} required /></Field>
+            <Field label={B.payerName}><Input name="payer_name" defaultValue={defaults.payer_name} required /></Field>
+            <Field label={B.approverName}><Input name="approver_name" defaultValue={defaults.approver_name} /></Field>
+            {lines.map((l, i) => (
+              <div key={i} className="grid gap-2 rounded-xl border border-border p-2">
+                <Field label={`${B.description} · ${formatAmount(l.amount)}`}>
+                  <Input value={l.description} required onChange={(e) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
+                </Field>
+                <Field label={B.note}>
+                  <Input value={l.note} onChange={(e) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))} />
+                </Field>
+              </div>
+            ))}
+            <DialogFooter><Button type="submit" disabled={save.pending}>{t.common.save}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export function VoidBillButton({ billId }: { billId: string }) {
+  const { t } = useI18n();
+  const B = t.bills;
+  const [open, setOpen] = useState(false);
+  const voidIt = useAction(voidBillAction);
+  return (
+    <>
+      <Button variant="outline" className="text-destructive" onClick={() => setOpen(true)}><Ban /> {B.voidBill}</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{B.voidBill}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{B.voidHint}</p>
+          <form className="grid gap-3" onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            if (await voidIt.run({ id: billId, reason: fd.get('reason') })) setOpen(false);
+          }}>
+            <Field label={B.voidReason}><Input name="reason" required /></Field>
+            <DialogFooter><Button type="submit" variant="destructive" disabled={voidIt.pending}>{t.common.confirm}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+const MAX_BYTES = 10 * 1024 * 1024;
+
+/** Uploads straight to Storage from the browser (managers may write bill files), then registers it. */
+export function AttachmentUploader({ billId }: { billId: string }) {
+  const { t } = useI18n();
+  const B = t.bills;
+  const [kind, setKind] = useState<'SLIP' | 'EVIDENCE' | 'OTHER'>('SLIP');
+  const [busy, setBusy] = useState(false);
+  const add = useAction(addAttachmentAction);
+  async function upload(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > MAX_BYTES) { toast.error(`${file.name}: > 10MB`); continue; }
+        const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const path = `bills/${new Date().toISOString().slice(0, 7)}/${billId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await getSupabaseBrowserClient().storage.from('expense-receipts').upload(path, file, { contentType: file.type || 'image/jpeg' });
+        if (error) { toast.error(error.message); continue; }
+        const res = await add.run({ bill_id: billId, kind, path });
+        if (res?.driveError) toast.error(`${B.driveFailed}: ${res.driveError}`);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <NativeSelect value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} className="w-auto" aria-label={B.attachments}>
+        <option value="SLIP">{B.slip}</option>
+        <option value="EVIDENCE">{B.evidence}</option>
+        <option value="OTHER">{B.other}</option>
+      </NativeSelect>
+      <label className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-4 ${busy ? 'opacity-50' : ''}`}>
+        <ImagePlus className="size-5" /> {busy ? B.uploading : B.addAttachment}
+        <input type="file" accept="image/*,application/pdf" multiple className="sr-only" disabled={busy} onChange={(e) => { void upload(e.target.files); e.target.value = ''; }} />
+      </label>
+    </div>
   );
 }
