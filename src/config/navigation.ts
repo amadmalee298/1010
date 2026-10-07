@@ -5,7 +5,7 @@ export type NavKey = keyof Dictionary['nav'];
 export type IconName =
   | 'pos' | 'orders' | 'dashboard' | 'products' | 'categories' | 'ingredients' | 'recipes' | 'inventory'
   | 'production' | 'suppliers' | 'purchasing' | 'customers' | 'promotions' | 'expenses' | 'cash' | 'reports'
-  | 'employees' | 'audit' | 'settings' | 'bills' | 'telegram';
+  | 'employees' | 'audit' | 'settings' | 'bills' | 'telegram' | 'accounting' | 'signature';
 
 export interface NavItem { href: string; label: NavKey; icon: IconName; capability: Capability }
 export interface NavGroup { label: NavKey; items: NavItem[] }
@@ -42,6 +42,8 @@ export const NAVIGATION: NavGroup[] = [
       { href: '/reports', label: 'reports', icon: 'reports', capability: 'viewReports' },
       { href: '/expenses', label: 'expenses', icon: 'expenses', capability: 'recordExpense' },
       { href: '/bills', label: 'bills', icon: 'bills', capability: 'approveBills' },
+      { href: '/accounting', label: 'accounting', icon: 'accounting', capability: 'viewReports' },
+      { href: '/signature', label: 'signature', icon: 'signature', capability: 'linkTelegram' },
       { href: '/telegram', label: 'telegram', icon: 'telegram', capability: 'linkTelegram' },
     ],
   },

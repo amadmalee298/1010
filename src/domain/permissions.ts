@@ -26,6 +26,7 @@ export const CAPABILITIES = {
   cancelOrder: MANAGEMENT,
   viewReports: MANAGEMENT,
   approveBills: MANAGEMENT,
+  postJournals: OWNER_ONLY,
   linkTelegram: FRONT_OF_HOUSE,
   manageEmployees: OWNER_ONLY,
   manageSettings: OWNER_ONLY,

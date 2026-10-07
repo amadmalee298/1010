@@ -21,6 +21,9 @@ export async function buildSubstituteReceipt(db: SupabaseServerClient, bill: Bil
     company: { name: s.company_name || s.shop_name, taxId: s.tax_id, address: s.shop_address, phone: s.shop_phone },
     payer: bill.submitter_name,
     lines,
+    payerSignature: bill.payer_signature,
+    approverSignature: bill.approver_signature,
+    approverName: bill.approver_name,
   };
 }
 
