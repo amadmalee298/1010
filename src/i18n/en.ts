@@ -163,6 +163,7 @@ export const en: Dictionary = {
     newJournal: 'New entry', openingBalances: 'Opening balances', isOpening: 'Opening balances (system start)', memo: 'Description',
     addLine: 'Add line', post: 'Post', reverse: 'Reverse', reversed: 'Reversed', unbalancedLines: 'Debits must equal credits',
     journalHint: 'Use for opening balances, equipment, loans, capital, drawings, depreciation or corrections · sales, expenses and stock post automatically',
+    openingTag: 'Opening balance',
     drCrTitle: 'Quick rule',
     drCrDebit: 'Debit = money or goods coming in, or an expense going up',
     drCrCredit: 'Credit = money going out, or where the money came from (capital, loans, income)',

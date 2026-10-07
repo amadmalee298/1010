@@ -132,7 +132,10 @@ export default async function AccountingPage({ searchParams }: { searchParams: P
           {journals.length === 0 ? <p className="text-muted-foreground">{A.noJournals}</p> : journals.map((j) => (
             <Card key={j.id}>
               <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base">{j.entry_number} · {formatDate(j.entry_date)} · {j.memo}</CardTitle>
+                <CardTitle className="text-base">
+                  {j.entry_number} · {formatDate(j.entry_date)} · {j.memo}
+                  {j.is_opening ? <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{A.openingTag}</span> : null}
+                </CardTitle>
                 {owner && !j.reverses && !journals.some((x) => x.reverses === j.id) ? <ReverseJournalButton id={j.id} />
                   : journals.some((x) => x.reverses === j.id) ? <span className="text-sm text-muted-foreground">{A.reversed}</span> : null}
               </CardHeader>
