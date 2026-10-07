@@ -8,7 +8,7 @@ import { OWNER_ONLY } from '@/domain/permissions';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TelegramWebhookButton } from '@/components/bills/telegram-link';
-import { telegramConfigured } from '@/server/integrations/telegram';
+import { telegramConfigured, tokenLooksValid, webhookSecret } from '@/server/integrations/telegram';
 import { billReaderConfigured } from '@/server/integrations/bill-reader';
 import { driveConfigured } from '@/server/integrations/google-drive';
 
@@ -28,7 +28,7 @@ export default async function SettingsPage() {
         <CardHeader><CardTitle>{t.admin.integrations}</CardTitle></CardHeader>
         <CardContent className="grid gap-3">
           {([
-            ['Telegram (TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET)', telegramConfigured() && (process.env.TELEGRAM_WEBHOOK_SECRET ?? '').length >= 16],
+            ['Telegram (TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET)', telegramConfigured() && tokenLooksValid() && webhookSecret().length >= 16],
             ['AI (ANTHROPIC_API_KEY)', billReaderConfigured()],
             ['Google Drive (GOOGLE_DRIVE_SCRIPT_URL, GOOGLE_DRIVE_SCRIPT_SECRET)', driveConfigured()],
           ] as const).map(([name, ok]) => (
