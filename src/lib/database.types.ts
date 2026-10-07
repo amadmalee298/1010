@@ -157,6 +157,7 @@ export type BillSubmissionRow = {
   approver_name: string | null; payer_signature: string | null; approver_signature: string | null;
   payer_name: string | null; voided_at: Timestamp | null; void_reason: string | null; voided_by: Uuid | null;
 };
+export type AccountLedgerRow = { entry_date: string; source_type: string; reference: string | null; memo: string | null; debit: number; credit: number; running_balance: number };
 export type AttachmentKind = 'SLIP' | 'EVIDENCE' | 'OTHER';
 export type BillAttachmentRow = { id: Uuid; bill_id: Uuid; kind: AttachmentKind; path: string; drive_url: string | null; uploaded_by: Uuid | null; created_at: Timestamp };
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
@@ -352,6 +353,7 @@ export interface Database {
       reverse_journal: Fn<{ p_id: string; p_entry_date?: string | null }, JournalEntryRow>;
       save_my_signature: Fn<{ p_image: string | null }, undefined>;
       report_trial_balance: Fn<{ p_as_of: string }, TrialBalanceRow[]>;
+      report_account_ledger: Fn<{ p_account: string; p_from: string; p_to: string }, AccountLedgerRow[]>;
       report_balance_sheet: Fn<{ p_as_of: string }, Json>;
       report_gl_pnl: Fn<{ p_from: string; p_to: string }, Json>;
       report_cash_flow: Fn<{ p_from: string; p_to: string }, Json>;
