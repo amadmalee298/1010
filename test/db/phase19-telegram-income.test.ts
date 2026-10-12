@@ -8,7 +8,7 @@ describe.skipIf(!hasDb)('Phase 19: income from Telegram', () => {
   let owner: string, cashier: string;
 
   const balance = async (code: string, asOf: string) =>
-    n((await db.adminOne<{ b: string } | undefined>(`select coalesce(sum(debit - credit), 0) as b from public.gl_lines where account_code = $1 and entry_date <= $2`, [code, asOf]))?.b);
+    n((await db.adminOne<{ b: string }>(`select coalesce(sum(debit - credit), 0) as b from public.gl_lines where account_code = $1 and entry_date <= $2`, [code, asOf])).b);
 
   beforeAll(async () => {
     db = await createTestDb();
