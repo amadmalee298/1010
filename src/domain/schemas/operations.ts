@@ -46,7 +46,11 @@ export const cashMovementSchema = z.object({ type: z.enum(['DEPOSIT', 'WITHDRAWA
 export const closeSessionSchema = z.object({ actual_cash: money, note: optionalText(300) });
 
 // ---- Expenses ----
-export const EXPENSE_CATEGORIES = ['ค่าเช่า', 'ค่าแรง', 'ค่าน้ำ/ไฟ', 'บรรจุภัณฑ์', 'ค่าขนส่ง', 'การตลาด', 'ซ่อมบำรุง', 'ค่าธรรมเนียม', 'อื่น ๆ'] as const;
+/** Most bills are ingredients, so that comes first (it is the default in the forms). */
+export const EXPENSE_CATEGORIES = [
+  'วัตถุดิบ', 'บรรจุภัณฑ์', 'วัสดุสิ้นเปลือง', 'อุปกรณ์ร้าน', 'ค่าเช่า', 'ค่าแรง', 'ค่าน้ำ/ไฟ', 'ค่าแก๊ส',
+  'ค่าขนส่ง', 'การตลาด', 'ซ่อมบำรุง', 'ค่าธรรมเนียม', 'อื่น ๆ',
+] as const;
 export const expenseSchema = z.object({
   expense_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   category: requiredText(60),
