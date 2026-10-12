@@ -361,6 +361,10 @@ export interface Database {
       telegram_add_attachment: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_path: string; p_kind?: AttachmentKind }, BillAttachmentRow>;
       telegram_await_upload: Fn<{ p_telegram_user_id: number; p_submission_number: string; p_kind: AttachmentKind }, undefined>;
       telegram_take_upload: Fn<{ p_telegram_user_id: number }, { submission_number: string; kind: AttachmentKind }[]>;
+      telegram_income_draft: Fn<{ p_telegram_user_id: number; p_entry_date: string; p_amount: number; p_memo: string }, string>;
+      telegram_post_income: Fn<{ p_telegram_user_id: number; p_draft: string; p_account: '1001' | '1010' }, Json>;
+      telegram_discard_income: Fn<{ p_telegram_user_id: number; p_draft: string }, undefined>;
+      telegram_reverse_income: Fn<{ p_telegram_user_id: number; p_draft: string }, JournalEntryRow>;
       telegram_cancel_bill: Fn<{ p_telegram_user_id: number; p_submission_number: string }, BillSubmissionRow>;
       bill_card: Fn<{ p_id: string }, Json>;
       telegram_bill_card: Fn<{ p_telegram_user_id: number; p_submission_number: string }, Json>;

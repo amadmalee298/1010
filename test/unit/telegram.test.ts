@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { billCardButtons, billCardText, kindFromCaption, parseCallback, parseCommand, summaryText, type BillCard } from '@/domain/telegram';
+import { billCardButtons, billCardText, incomeDraftText, incomePostedText, kindFromCaption, parseCallback, parseCommand, parseIncomeCallback, parseIncomeText, parseLeadingDate, summaryText, type BillCard } from '@/domain/telegram';
 
 describe('parseCommand', () => {
   it('reads command, bot suffix and arguments', () => {
@@ -74,5 +74,37 @@ describe('bill card', () => {
     expect(parseCallback(undefined)).toBeNull();
     expect(kindFromCaption('สลิปโอน')).toBe('SLIP');
     expect(kindFromCaption('')).toBe('EVIDENCE');
+  });
+});
+
+describe('typed dates and income', () => {
+  it('reads Buddhist-era and Christian-era dates at the start', () => {
+    expect(parseLeadingDate('12/10/69 รายได้ร้าน 2,319 บาท')).toEqual({ date: '2026-10-12', rest: 'รายได้ร้าน 2,319 บาท' });
+    expect(parseLeadingDate('1/9/2569 ค่าแก๊ส 380')).toEqual({ date: '2026-09-01', rest: 'ค่าแก๊ส 380' });
+    expect(parseLeadingDate('05-10-2026 ค่าน้ำแข็ง 40').date).toBe('2026-10-05');
+    expect(parseLeadingDate('31/02/69 x 1')).toEqual({ date: null, rest: '31/02/69 x 1' });
+    expect(parseLeadingDate('ค่าน้ำแข็ง 40')).toEqual({ date: null, rest: 'ค่าน้ำแข็ง 40' });
+  });
+  it('recognises income and leaves expenses alone', () => {
+    expect(parseIncomeText('12/10/69 รายได้ร้านครัวคัสตาร์ด 2,319 บาท')).toEqual({ date: '2026-10-12', amount: 2319, memo: 'รายได้ร้านครัวคัสตาร์ด' });
+    expect(parseIncomeText('+1500')).toEqual({ date: null, amount: 1500, memo: 'รายรับ' });
+    expect(parseIncomeText('ยอดขายวันนี้ 980.50')?.amount).toBe(980.5);
+    expect(parseIncomeText('จ่ายค่าไฟ 40 บาท')).toBeNull();
+    expect(parseIncomeText('ค่ากุ้งสด 1060')).toBeNull();
+    expect(parseIncomeText('รายได้ร้าน')).toBeNull();
+  });
+  it('parses income buttons', () => {
+    const id = '0b6f3c2e-1d2a-4f5b-9c8d-7e6f5a4b3c2d';
+    expect(parseIncomeCallback(`inc:B:${id}`)).toEqual({ action: 'income_post', bank: true, draft: id });
+    expect(parseIncomeCallback(`incx:${id}`)).toEqual({ action: 'income_discard', draft: id });
+    expect(parseIncomeCallback(`incr:${id}`)).toEqual({ action: 'income_reverse', draft: id });
+    expect(parseIncomeCallback('inc:B:nope')).toBeNull();
+  });
+  it('formats the income messages', () => {
+    const t = incomePostedText({ date: '2026-10-12', amount: 2319, memo: 'รายได้ร้าน', company: 'ครัวคัสตาร์ด', entry: 'JV-0003', bank: true });
+    expect(t).toContain('📈 รายรับ  +2,319.00 บาท');
+    expect(t).toContain('📅 วันที่: 12 ต.ค. 2569');
+    expect(t).toContain('โอน / QR');
+    expect(incomeDraftText({ date: '2026-10-12', amount: 2319, memo: 'x', company: null })).toContain('เลือกช่องทางรับเงิน');
   });
 });
