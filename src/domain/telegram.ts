@@ -133,3 +133,80 @@ export function parseCallback(data: string | undefined): BillCallback | null {
 
 /** Kind of a photo sent as a reply, from its caption ("สลิป" → slip). */
 export const kindFromCaption = (caption: string): CardKind => (/สลิป|slip|โอน/i.test(caption) ? 'SLIP' : 'EVIDENCE');
+
+// -----------------------------------------------------------------------------
+// Dates typed at the start of a message, and income
+// -----------------------------------------------------------------------------
+
+/**
+ * "12/10/69 …" → { date: '2026-10-12', rest: '…' }. Two-digit years ≥ 50 and four-digit years > 2400
+ * are Buddhist-era (69 → 2569 → 2026); others are Christian-era.
+ */
+export function parseLeadingDate(text: string): { date: string | null; rest: string } {
+  const m = text.trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?=\s|$)\s*/);
+  if (!m) return { date: null, rest: text.trim() };
+  const day = Number(m[1]), month = Number(m[2]);
+  let year = Number(m[3]);
+  if ((m[3] ?? '').length === 2) year = year >= 50 ? 2500 + year - 543 : 2000 + year;
+  else if (year > 2400) year -= 543;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return { date: null, rest: text.trim() };
+  return { date: d.toISOString().slice(0, 10), rest: text.trim().slice(m[0].length).trim() };
+}
+
+const INCOME = /^\+|รายได้|รายรับ|ยอดขาย|ขายได้|รับเงิน/;
+
+/** Income typed to the bot: "+2319", "รายได้ร้าน 2,319 บาท", "ยอดขายวันนี้ 1500". Never an expense line ("จ่าย…"). */
+export function parseIncomeText(text: string): { date: string | null; amount: number; memo: string } | null {
+  const { date, rest } = parseLeadingDate(text);
+  if (!INCOME.test(rest) || /^(จ่าย|ค่า)/.test(rest)) return null;
+  const m = rest.match(/^\+?\s*(.*?)[\s:=-]*\+?(\d[\d,]*(?:\.\d{1,2})?)\s*(?:บาท|฿|thb)?\.?$/i);
+  if (!m) return null;
+  const amount = Number((m[2] ?? '').replace(/,/g, ''));
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return { date, amount: Math.round(amount * 100) / 100, memo: (m[1] ?? '').trim() || 'รายรับ' };
+}
+
+export function incomeDraftText(i: { date: string; amount: number; memo: string; company: string | null }): string {
+  return [
+    '💰 รายรับ · เลือกช่องทางรับเงิน',
+    '━━━━━━━━━━━━━━',
+    `📈 รายรับ  +${amount(i.amount)} บาท`,
+    `📝 ${i.memo}`,
+    '',
+    `📅 วันที่: ${thaiDate(i.date)}`,
+    '🗂 หมวดหมู่: รายได้จากการขาย',
+    i.company ? `🏢 ธุรกิจ: ${i.company}` : null,
+    '',
+    'รับเป็นเงินสดหรือโอน/QR?',
+  ].filter((l) => l !== null).join('\n');
+}
+
+export function incomePostedText(i: { date: string; amount: number; memo: string; company: string | null; entry: string; bank: boolean }): string {
+  return [
+    '✅ บันทึกรายรับเรียบร้อย',
+    `🔖 ${i.entry}`,
+    '━━━━━━━━━━━━━━',
+    `📈 รายรับ  +${amount(i.amount)} บาท`,
+    `📝 ${i.memo}`,
+    '',
+    `📅 วันที่: ${thaiDate(i.date)}`,
+    `💳 รับเป็น: ${i.bank ? 'โอน / QR (บัญชีธนาคาร)' : 'เงินสด'}`,
+    '🗂 หมวดหมู่: รายได้จากการขาย',
+    i.company ? `🏢 ธุรกิจ: ${i.company}` : null,
+  ].filter((l) => l !== null).join('\n');
+}
+
+export type IncomeCallback =
+  | { action: 'income_post'; bank: boolean; draft: string }
+  | { action: 'income_discard'; draft: string }
+  | { action: 'income_reverse'; draft: string };
+
+const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+export function parseIncomeCallback(data: string | undefined): IncomeCallback | null {
+  const post = data?.match(new RegExp(`^inc:(C|B):(${UUID})$`));
+  if (post) return { action: 'income_post', bank: post[1] === 'B', draft: post[2] ?? '' };
+  const other = data?.match(new RegExp(`^(incx|incr):(${UUID})$`));
+  if (!other) return null;
+  return other[1] === 'incx' ? { action: 'income_discard', draft: other[2] ?? '' } : { action: 'income_reverse', draft: other[2] ?? '' };
+}

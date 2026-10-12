@@ -5,7 +5,7 @@ import { formatTHB } from '@/domain/money';
 import { bangkokDate } from '@/domain/datetime';
 import { parseExpenseText, type BillExtraction } from '@/domain/bills';
 import { answerCallback, downloadFile, editMessage, pickImage, sendMessage, type TelegramCallbackQuery, type TelegramUpdate } from '@/server/integrations/telegram';
-import { KIND_LABEL, kindFromCaption, parseCallback, type CardKind } from '@/domain/telegram';
+import { incomeDraftText, incomePostedText, KIND_LABEL, kindFromCaption, parseCallback, parseIncomeCallback, parseIncomeText, parseLeadingDate, type CardKind } from '@/domain/telegram';
 import { loadCard, sendCard } from './telegram-card';
 import { readBill, type IngredientHint } from '@/server/integrations/bill-reader';
 import { HELP, parseCommand, runCommand } from './telegram-commands';
@@ -93,6 +93,28 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
 
   if (!image && (!text || text.startsWith('/'))) return reply(HELP);
 
+  // "รายได้ร้าน 2,319" / "+2319" is income, not a bill.
+  const income = !image ? parseIncomeText(text) : null;
+  if (income) {
+    if (!manager) return reply('บันทึกรายรับได้เฉพาะเจ้าของร้านและผู้จัดการ ส่วนรายจ่ายพิมพ์ส่งได้ตามปกติครับ');
+    const date = income.date ?? bangkokDate();
+    const { data: draft, error } = await admin.rpc('telegram_income_draft', {
+      p_telegram_user_id: m.from.id, p_entry_date: date, p_amount: income.amount, p_memo: income.memo,
+    });
+    if (error || !draft) throw new Error(`telegram_income_draft: ${error?.message ?? 'no id'}`);
+    await sendMessage(m.chat.id, incomeDraftText({ ...income, date, company: await companyName(admin) }), m.message_id, {
+      inline_keyboard: [
+        [{ text: '💵 เงินสด', callback_data: `inc:C:${draft}` }, { text: '🏦 โอน / QR', callback_data: `inc:B:${draft}` }],
+        [{ text: '❌ ยกเลิก', callback_data: `incx:${draft}` }],
+      ],
+    });
+    return;
+  }
+
+  // "12/10/69 ค่าน้ำแข็ง 40": the typed date is the bill date.
+  const typed = parseLeadingDate(text);
+  text = typed.rest;
+
   const hints = await ingredientHints(admin);
   let photoPath: string | null = null;
   let photo: Buffer | null = null;
@@ -123,7 +145,7 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
     p_telegram_update_id: update.update_id, p_chat_id: m.chat.id, p_employee_id: employee.employee_id,
     p_has_receipt: Boolean(image), p_photo_path: photoPath, p_message_text: text || null,
     p_extraction: extraction as unknown as Json, p_extraction_error: read.ok ? null : read.error,
-    p_vendor: extraction?.vendor ?? null, p_bill_date: extraction?.bill_date ?? null, p_total: total,
+    p_vendor: extraction?.vendor ?? null, p_bill_date: typed.date ?? extraction?.bill_date ?? null, p_total: total,
   });
   if (error || !bill) throw new Error(`submit_bill: ${error?.message ?? 'no row'}`);
 
@@ -184,8 +206,54 @@ async function attachToBill(
   }
 }
 
+async function companyName(admin: Admin): Promise<string | null> {
+  const { data } = await admin.from('settings').select('key, value').in('key', ['company_name', 'shop_name']);
+  const get = (k: string) => { const v = data?.find((r) => r.key === k)?.value; return typeof v === 'string' && v.trim() ? v.trim() : null; };
+  return get('company_name') ?? get('shop_name');
+}
+
+/** Buttons under an income draft: cash / transfer, discard, and undo after recording. */
+async function handleIncomeCallback(admin: Admin, q: TelegramCallbackQuery, action: NonNullable<ReturnType<typeof parseIncomeCallback>>): Promise<void> {
+  const chatId = q.message?.chat.id;
+  const messageId = q.message?.message_id;
+  if (!chatId || !messageId) return answerCallback(q.id);
+  const denied = (msg: string) => answerCallback(q.id, /FORBIDDEN/.test(msg) ? 'เฉพาะเจ้าของร้านและผู้จัดการ' : /INVALID_STATE/.test(msg) ? 'รายการนี้ทำไปแล้ว' : 'ไม่พบรายการนี้');
+
+  if (action.action === 'income_discard') {
+    const { error } = await admin.rpc('telegram_discard_income', { p_telegram_user_id: q.from.id, p_draft: action.draft });
+    if (error) return denied(error.message);
+    await answerCallback(q.id, 'ยกเลิกแล้ว');
+    await editMessage(chatId, messageId, 'ยกเลิกรายรับนี้แล้ว ไม่ได้บันทึก ❌').catch(() => undefined);
+    return;
+  }
+
+  if (action.action === 'income_reverse') {
+    const { data, error } = await admin.rpc('telegram_reverse_income', { p_telegram_user_id: q.from.id, p_draft: action.draft });
+    if (error || !data) return denied(error?.message ?? '');
+    await answerCallback(q.id, 'ยกเลิกรายรับแล้ว');
+    await editMessage(chatId, messageId, `↩️ ยกเลิกรายรับนี้แล้ว (บันทึกกลับรายการ ${data.entry_number})`).catch(() => undefined);
+    return;
+  }
+
+  const { data, error } = await admin.rpc('telegram_post_income', {
+    p_telegram_user_id: q.from.id, p_draft: action.draft, p_account: action.bank ? '1010' : '1001',
+  });
+  if (error || !data) return denied(error?.message ?? '');
+  const posted = data as { entry_number: string; entry_date: string; amount: number | string; memo: string };
+  await answerCallback(q.id, 'บันทึกรายรับแล้ว');
+  await editMessage(chatId, messageId, incomePostedText({
+    date: posted.entry_date, amount: Number(posted.amount), memo: posted.memo, entry: posted.entry_number,
+    bank: action.bank, company: await companyName(admin),
+  }), { inline_keyboard: [[{ text: '↩️ ยกเลิกรายรับนี้', callback_data: `incr:${action.draft}` }]] }).catch(() => undefined);
+}
+
 /** Inline buttons under a bill card. */
 async function handleCallback(admin: Admin, q: TelegramCallbackQuery, appOrigin: string): Promise<void> {
+  const incomeAction = parseIncomeCallback(q.data);
+  if (incomeAction) {
+    if (q.message?.chat.type !== 'private') return answerCallback(q.id);
+    return handleIncomeCallback(admin, q, incomeAction);
+  }
   const chatId = q.message?.chat.id;
   const action = parseCallback(q.data);
   if (!chatId || !action || q.message?.chat.type !== 'private') return answerCallback(q.id);
