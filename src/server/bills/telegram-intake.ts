@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/lib/database.types';
 import { formatTHB } from '@/domain/money';
 import { bangkokDate } from '@/domain/datetime';
-import { parseExpenseText, type BillExtraction } from '@/domain/bills';
+import { aiErrorHint, parseExpenseText, type BillExtraction } from '@/domain/bills';
 import { answerCallback, downloadFile, editMessage, pickImage, sendMessage, type TelegramCallbackQuery, type TelegramUpdate } from '@/server/integrations/telegram';
 import { incomeDraftText, incomePostedText, KIND_LABEL, kindFromCaption, parseCallback, parseIncomeCallback, parseIncomeText, parseLeadingDate, type CardKind } from '@/domain/telegram';
 import { loadCard, sendCard } from './telegram-card';
@@ -152,7 +152,7 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
   const link = `${appOrigin}/bills/${bill.id}`;
   const warnings = [
     extraction && !extraction.is_bill ? '⚠️ รูปนี้ไม่เหมือนบิล ผู้จัดการจะตรวจอีกครั้ง' : null,
-    !read.ok && image ? '⚠️ อ่านบิลอัตโนมัติไม่ได้ ผู้จัดการจะกรอกเอง' : null,
+    !read.ok && image ? `⚠️ อ่านบิลอัตโนมัติไม่ได้\nสาเหตุ: ${aiErrorHint(read.error)}\n(${read.error.slice(0, 200)})` : null,
   ].filter(Boolean);
   if (warnings.length) await reply(warnings.join('\n'));
   await sendCard(m.chat.id, await loadCard(admin, bill.id), { replyTo: m.message_id, appOrigin, manager });

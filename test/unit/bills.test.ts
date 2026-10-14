@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bahtText, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
+import { aiErrorHint, bahtText, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
 
 describe('bahtText', () => {
   it.each([
@@ -81,5 +81,14 @@ describe('substituteReceiptHtml voided', () => {
       company: { name: 'x', taxId: '', address: '', phone: '' }, lines: [{ description: 'y', amount: 1, note: '' }],
     });
     expect(html).toContain('<div class="void">ยกเลิก</div>');
+  });
+});
+
+describe('aiErrorHint', () => {
+  it('explains common AI failures in Thai', () => {
+    expect(aiErrorHint('AI error 400: Your credit balance is too low')).toMatch(/เครดิต/);
+    expect(aiErrorHint('ANTHROPIC_API_KEY is invalid')).toMatch(/key ใหม่/);
+    expect(aiErrorHint('Request timed out.')).toMatch(/นานเกินไป/);
+    expect(aiErrorHint('something else')).toMatch(/กรอกยอดเอง/);
   });
 });

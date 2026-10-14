@@ -154,3 +154,16 @@ ${r.voided ? '<div class="void">ยกเลิก</div>' : ''}<h1>ใบรั�
 <div class="sign"><div>${sig(r.payerSignature)}<div class="line"></div>(${esc(r.payer)})<br>ผู้เบิกจ่าย</div><div>${sig(r.approverSignature)}<div class="line"></div>(${r.approverName ? esc(r.approverName) : '..............................'})<br>ผู้อนุมัติ</div></div>
 </body></html>`;
 }
+
+/** Thai explanation (with the fix) for why the AI could not read a bill. */
+export function aiErrorHint(error: string): string {
+  if (/not set/i.test(error)) return 'ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY ใน Vercel';
+  if (/invalid|authentication|401/i.test(error)) return 'ANTHROPIC_API_KEY ใช้ไม่ได้: สร้าง key ใหม่ที่ console.anthropic.com แล้ววางใน Vercel และ Redeploy';
+  if (/credit balance|billing|insufficient|402/i.test(error)) return 'เครดิต Anthropic หมด: เติมเครดิตที่ console.anthropic.com → Billing';
+  if (/rate limit|429/i.test(error)) return 'ส่งถี่เกินไป รอ 1 นาทีแล้วส่งรูปใหม่';
+  if (/overloaded|529|503|500/i.test(error)) return 'ระบบ AI ไม่ว่างชั่วคราว ลองส่งรูปใหม่อีกครั้ง';
+  if (/timed? ?out|timeout|abort/i.test(error)) return 'อ่านนานเกินไป ลองถ่ายรูปให้ชัดและเห็นเฉพาะบิล แล้วส่งใหม่';
+  if (/image|too large|size/i.test(error)) return 'รูปใหญ่หรือเปิดไม่ได้ ลองส่งเป็นรูปภาพปกติ (ไม่ใช่ไฟล์) อีกครั้ง';
+  if (/declined|refusal/i.test(error)) return 'AI ไม่อ่านรูปนี้ ผู้จัดการกรอกยอดเองในแอป';
+  return 'ผู้จัดการกรอกยอดเองในแอปได้ หรือลองส่งรูปใหม่';
+}

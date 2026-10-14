@@ -16,7 +16,7 @@ import { AttachmentUploader, BillReview, EditSubstituteButton, FileSubstituteBut
 import { MANAGEMENT } from '@/domain/permissions';
 import { formatAmount } from '@/domain/money';
 import { bangkokDate, formatDateTime } from '@/domain/datetime';
-import { billExtractionSchema, type BillExtraction } from '@/domain/bills';
+import { aiErrorHint, billExtractionSchema, type BillExtraction } from '@/domain/bills';
 
 type ApprovedLine = { description: string; amount: number; ingredient_id?: string; quantity?: number; note?: string };
 
@@ -78,7 +78,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               <AttachmentUploader billId={bill.id} />
             </CardContent>
           </Card>
-          {bill.extraction_error ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{B.aiFailed}: {bill.extraction_error}</p> : null}
+          {bill.extraction_error ? <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{B.aiFailed}: {aiErrorHint(bill.extraction_error)}<span className="mt-1 block text-xs opacity-80">{bill.extraction_error}</span></p> : null}
           {extraction && !extraction.is_bill ? <p className="rounded-xl bg-warning/15 p-3 text-sm">{B.notABill}</p> : null}
           {extraction?.note ? <p className="rounded-xl bg-info/10 p-3 text-sm">{B.aiNote}: {extraction.note}</p> : null}
         </div>
