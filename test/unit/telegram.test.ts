@@ -108,3 +108,13 @@ describe('typed dates and income', () => {
     expect(incomeDraftText({ date: '2026-10-12', amount: 2319, memo: 'x', company: null })).toContain('เลือกช่องทางรับเงิน');
   });
 });
+
+describe('bill card without an amount', () => {
+  it('asks for the amount instead of showing -0.00', () => {
+    const c = { id: 'b', submission_number: 'BL261028-0001', status: 'PENDING' as const, voided: false, void_reason: null, review_note: null,
+      total: 0, descriptions: [], message_text: null, vendor: null, bill_date: '2026-10-28', has_receipt: true, substitute_number: null,
+      payer_name: null, payer_signed: false, approver_signed: false, paid_method: null, paid_from_drawer: null, category: null,
+      attachments: { SLIP: 0, EVIDENCE: 0, OTHER: 0 }, company: null, submitter_chat_id: null } satisfies BillCard;
+    expect(billCardText(c)).toContain('📉 รายจ่าย  (รอกรอกยอด)');
+  });
+});

@@ -87,7 +87,7 @@ export function billCardText(c: BillCard): string {
     `${head}`,
     `🔖 ${c.submission_number}`,
     '━━━━━━━━━━━━━━',
-    c.total !== null ? `📉 รายจ่าย  -${amount(c.total)} บาท` : '📉 รายจ่าย  (รอกรอกยอด)',
+    c.total ? `📉 รายจ่าย  -${amount(c.total)} บาท` : '📉 รายจ่าย  (รอกรอกยอด)',
     `📝 ${description}`,
     c.vendor && c.descriptions.length ? `🏪 ร้าน: ${c.vendor}` : null,
     '',
