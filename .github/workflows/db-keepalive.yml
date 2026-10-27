@@ -1,0 +1,27 @@
+# Keeps the hosted Supabase project awake. On the free plan Supabase pauses a project after
+# 7 days without activity, and the app then times out (504). A tiny query every 3 days counts as activity.
+# Uses the same secrets as "Database migrations" (SUPABASE_DB_URL + SUPABASE_DB_PASSWORD).
+name: Database keep-alive
+
+on:
+  schedule:
+    - cron: '17 2 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ping database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL is not set; nothing to ping"
+            exit 0
+          fi
+          url="$(scripts/resolve-db-url.sh)"
+          echo "::add-mask::$url"
+          psql "$url" -v ON_ERROR_STOP=1 -tAc "select 'ok', now()"
