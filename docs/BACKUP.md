@@ -2,7 +2,9 @@
 
 **What is backed up:** the whole `public` schema of the Supabase database (sales, orders, stock,
 recipes, bills, accounting, employees, signatures, settings), every day at 03:13 Bangkok time,
-by the GitHub Actions workflow **Database backup**. Each backup is kept for 30 days.
+by the GitHub Actions workflow **Database backup**. Every backup is stored twice, both free:
+- **Google Drive** (your own): My Drive → Custard POS → สำรองข้อมูล → `YYYY-MM` — kept until you delete it
+- **GitHub Actions** → Database backup → run → Artifacts — kept 30 days
 
 **Not in the file:** bill photos and attachments (Supabase Storage). The app copies them to
 Google Drive (My Drive → Custard POS), and the substitute receipts are filed there as PDFs.
@@ -13,7 +15,9 @@ Login accounts (Supabase Auth) are not included; staff can be invited again.
    somewhere safe** (Notes with a lock, password manager). Without it a backup cannot be opened.
 2. GitHub → repository **1010** → Settings → Secrets and variables → Actions →
    **New repository secret** → Name `BACKUP_PASSPHRASE`, Secret = the passphrase → Add secret.
-3. Actions → **Database backup** → Run workflow, to make the first backup now.
+3. For the Google Drive copy, add two more secrets with the **same values as in Vercel**:
+   `GOOGLE_DRIVE_SCRIPT_URL` and `GOOGLE_DRIVE_SCRIPT_SECRET`.
+4. Actions → **Database backup** → Run workflow, to make a backup now.
 
 The repository is public; that is why every backup is encrypted with this passphrase.
 

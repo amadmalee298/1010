@@ -10,6 +10,13 @@
 #   SUPABASE_DB_URL, SUPABASE_DB_PASSWORD   same as "Database migrations"
 #   BACKUP_PASSPHRASE                       a long random phrase; keep a copy somewhere safe
 #
+# Storage (both free):
+#   - workflow artifact, kept 30 days (quick to find under Actions)
+#   - the owner's own Google Drive: My Drive → Custard POS → สำรองข้อมูล → YYYY-MM, kept until deleted.
+#     Uses the same Apps Script web app the app files bills with; add its two values as secrets
+#     GOOGLE_DRIVE_SCRIPT_URL and GOOGLE_DRIVE_SCRIPT_SECRET (same as in Vercel). Optional: without
+#     them the Drive copy is skipped with a warning.
+#
 # Restore: see docs/BACKUP.md
 name: Database backup
 
@@ -64,6 +71,7 @@ jobs:
             --output "out/custard-db-$stamp.dump.gpg" backup.dump 3<<<"$BACKUP_PASSPHRASE"
           shred -u backup.dump
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          echo "MONTH=$(TZ=Asia/Bangkok date +%Y-%m)" >> "$GITHUB_ENV"
           ls -l out
 
       - uses: actions/upload-artifact@v4
@@ -72,3 +80,39 @@ jobs:
           path: out/*.gpg
           retention-days: 30
           if-no-files-found: error
+
+      - name: Copy to Google Drive
+        env:
+          SCRIPT_URL: ${{ secrets.GOOGLE_DRIVE_SCRIPT_URL }}
+          SCRIPT_SECRET: ${{ secrets.GOOGLE_DRIVE_SCRIPT_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SCRIPT_URL" ] || [ -z "$SCRIPT_SECRET" ]; then
+            echo "::warning::Add GOOGLE_DRIVE_SCRIPT_URL and GOOGLE_DRIVE_SCRIPT_SECRET to also keep backups in Google Drive"
+            exit 0
+          fi
+          python3 -I - out/*.gpg <<'PY'
+          import base64, json, os, re, sys, urllib.request
+          url = re.sub(r'\s+', '', os.environ['SCRIPT_URL'])
+          if re.fullmatch(r'AKfy[\w-]{20,}', url):
+              url = f'https://script.google.com/macros/s/{url}/exec'
+          path = sys.argv[1]
+          body = json.dumps({
+              'secret': os.environ['SCRIPT_SECRET'].strip(),
+              'folder': ['สำรองข้อมูล', os.environ['MONTH']],
+              'name': os.path.basename(path),
+              'mimeType': 'application/octet-stream',
+              'base64': base64.b64encode(open(path, 'rb').read()).decode(),
+          }).encode()
+          req = urllib.request.Request(url, data=body, headers={'content-type': 'text/plain;charset=utf-8'})
+          # Apps Script answers with a redirect to the result, which urllib follows.
+          with urllib.request.urlopen(req, timeout=120) as res:
+              text = res.read().decode()
+          try:
+              answer = json.loads(text)
+          except ValueError:
+              sys.exit('Google Drive script did not answer with JSON: check the Web app URL (must end in /exec)')
+          if not answer.get('ok'):
+              sys.exit(f"Google Drive script error: {answer.get('error')}")
+          print('Saved to Google Drive')
+          PY
