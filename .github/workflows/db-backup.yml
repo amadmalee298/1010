@@ -1,0 +1,74 @@
+# Daily backup of the shop database (everything in the public schema: sales, stock, recipes, bills,
+# accounting, employees, signatures, ...). Bill photos live in Supabase Storage and are copied to
+# Google Drive by the app, so they are not part of this file.
+#
+# This repository is PUBLIC, and anyone signed in to GitHub can download a public repository's
+# workflow artifacts. The dump is therefore encrypted (AES-256) with the passphrase in the
+# BACKUP_PASSPHRASE secret before it is stored; without that secret the job refuses to run.
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL, SUPABASE_DB_PASSWORD   same as "Database migrations"
+#   BACKUP_PASSPHRASE                       a long random phrase; keep a copy somewhere safe
+#
+# Restore: see docs/BACKUP.md
+name: Database backup
+
+on:
+  schedule:
+    - cron: '13 20 * * *' # 03:13 Bangkok time, daily
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then echo "::error::Add the SUPABASE_DB_URL secret"; exit 1; fi
+          if [ "${#BACKUP_PASSPHRASE}" -lt 16 ]; then
+            echo "::error::Add a BACKUP_PASSPHRASE secret (16+ characters). The repository is public, so backups are only stored encrypted."
+            exit 1
+          fi
+
+      - name: Install pg_dump 17
+        run: |
+          sudo apt-get install -y -qq postgresql-common >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq postgresql-client-17 >/dev/null
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Dump and encrypt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          url="$(scripts/resolve-db-url.sh)"
+          echo "::add-mask::$url"
+          stamp="$(TZ=Asia/Bangkok date +%Y-%m-%d_%H%M)"
+          mkdir -p out
+          # Custom format: compressed, and pg_restore can restore all of it or single tables.
+          /usr/lib/postgresql/17/bin/pg_dump "$url" --schema=public --no-owner --no-privileges --format=custom --file=backup.dump
+          echo "Dump size: $(du -h backup.dump | cut -f1)"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 \
+            --output "out/custard-db-$stamp.dump.gpg" backup.dump 3<<<"$BACKUP_PASSPHRASE"
+          shred -u backup.dump
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: custard-db-${{ env.STAMP }}
+          path: out/*.gpg
+          retention-days: 30
+          if-no-files-found: error
