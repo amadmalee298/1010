@@ -126,4 +126,6 @@ TEST_DATABASE_URL=postgres://postgres@localhost:54329/postgres?host=/tmp npm tes
 
 ## Backups
 
-Supabase Pro includes daily backups / PITR. For the free tier schedule `supabase db dump`.
+Supabase Pro includes daily backups / PITR. On the free tier the **Database backup** workflow makes an
+encrypted daily dump (needs the `BACKUP_PASSPHRASE` secret) and **Database keep-alive** stops the
+project from being paused after 7 idle days. See [BACKUP.md](BACKUP.md).
