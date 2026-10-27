@@ -41,6 +41,8 @@ export const en: Dictionary = {
     lineCost: 'Cost', recipeCost: 'Cost per batch', costPerYield: 'Cost per yield unit', costPerSellingUnit: 'Cost per selling unit',
     netPrice: 'Net price (ex VAT)', history: 'Version history', savedNewVersion: 'Saved as a new version',
     recipeVersionNote: 'Saving creates a new version; old versions are kept for production history',
+    recipeListHint: 'Tap "Edit recipe" to set the ingredients and quantities per batch; cost and margin are calculated for you',
+    recipeListEmpty: 'No products use recipes yet: Products → edit a product → Stock deduction → "Deduct ingredients by recipe"',
     selectIngredient: 'Select ingredient', perBatch: 'per batch',
   },
   inventory: {

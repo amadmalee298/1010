@@ -7,6 +7,8 @@ import { getT } from '@/i18n/server';
 import { PageHeader } from '@/components/ui/misc';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Pencil, Plus } from 'lucide-react';
 import { formatAmount, formatPercent, formatQty } from '@/domain/money';
 import { marginBand } from '@/domain/costing';
 import { MANAGEMENT } from '@/domain/permissions';
@@ -19,11 +21,13 @@ export default async function RecipesPage() {
   const rows = products.filter((p) => p.inventory_mode !== 'NONE');
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader title={t.nav.recipes} description={t.catalog.recipeVersionNote} />
+      <PageHeader title={t.nav.recipes} description={t.catalog.recipeVersionNote}
+        actions={<Button asChild variant="outline"><Link href="/products"><Plus /> {t.catalog.newProduct}</Link></Button>} />
+      <p className="mb-3 text-sm text-muted-foreground">{t.catalog.recipeListHint}</p>
       <Table>
         <THead>
           <TR>
-            <TH>{t.nav.products}</TH><TH>{t.catalog.recipe}</TH><TH className="text-right">{t.catalog.yieldQuantity}</TH>
+            <TH /><TH>{t.nav.products}</TH><TH>{t.catalog.recipe}</TH><TH className="text-right">{t.catalog.yieldQuantity}</TH>
             <TH className="text-right">{t.catalog.recipeCost}</TH><TH className="text-right">{t.catalog.costPerSellingUnit}</TH>
             <TH className="text-right">{t.catalog.sellingPrice}</TH><TH className="text-right">{t.catalog.grossProfit}</TH><TH className="text-right">{t.catalog.grossMargin}</TH>
           </TR>
@@ -34,6 +38,11 @@ export default async function RecipesPage() {
             const band = marginBand(c?.gross_margin ?? null);
             return (
               <TR key={p.id}>
+                <TD>
+                  <Button asChild size="sm" variant={c ? 'outline' : 'default'}>
+                    <Link href={`/recipes/${p.id}`}>{c ? <><Pencil /> {t.catalog.editRecipe}</> : <><Plus /> {t.catalog.createRecipe}</>}</Link>
+                  </Button>
+                </TD>
                 <TD><Link className="font-medium text-primary-strong hover:underline" href={`/recipes/${p.id}`}>{p.name_th}</Link></TD>
                 <TD>{c ? `${c.name} · v${c.version}` : <Badge variant="warning">{t.catalog.noRecipe}</Badge>}</TD>
                 <TD className="text-right tabular-nums">{c ? `${formatQty(c.yield_quantity)} ${c.yield_unit}` : '—'}</TD>
@@ -49,6 +58,7 @@ export default async function RecipesPage() {
           })}
         </TBody>
       </Table>
+      {rows.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">{t.catalog.recipeListEmpty}</p> : null}
     </div>
   );
 }
