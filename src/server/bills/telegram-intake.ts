@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/lib/database.types';
 import { formatTHB } from '@/domain/money';
 import { bangkokDate } from '@/domain/datetime';
-import { aiErrorHint, parseExpenseText, type BillExtraction } from '@/domain/bills';
+import { aiErrorHint, extractionTotal, parseExpenseText, type BillExtraction } from '@/domain/bills';
 import { answerCallback, downloadFile, editMessage, pickImage, sendMessage, type TelegramCallbackQuery, type TelegramUpdate } from '@/server/integrations/telegram';
 import { incomeDraftText, incomePostedText, KIND_LABEL, kindFromCaption, parseCallback, parseIncomeCallback, parseIncomeText, parseLeadingDate, type CardKind } from '@/domain/telegram';
 import { loadCard, sendCard } from './telegram-card';
@@ -140,18 +140,59 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
     return reply(`ไม่เข้าใจรายการ ลองพิมพ์รายการตามด้วยยอดเงิน เช่น "ค่ากุ้งสด ปลาหมึก 1060"\n\n${HELP}`);
   }
 
-  const total = extraction?.total ?? (extraction ? extraction.lines.reduce((s, l) => s + l.amount, 0) : null);
+  // null, not 0, when nothing was read: the bill then shows as "amount missing" everywhere.
+  const total = extractionTotal(extraction);
+  const slip = Boolean(image && photoPath && extraction?.is_slip);
+
+  // A transfer slip usually pays a bill already sent: attach it there instead of booking the
+  // expense twice. Matched by the same sender and the same amount within 14 days;
+  // "บิลใหม่" in the caption skips the match.
+  if (slip && total && photoPath && !/บิลใหม่/.test(text)) {
+    const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+    const { data: match } = await admin.from('bill_submissions').select('id, submission_number')
+      .eq('submitted_by', employee.employee_id).in('status', ['PENDING', 'APPROVED']).is('voided_at', null)
+      .eq('total', total).gte('created_at', since).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (match) {
+      const { data: att, error: attErr } = await admin.rpc('telegram_add_attachment', {
+        p_telegram_user_id: m.from.id, p_submission_number: match.submission_number, p_path: photoPath, p_kind: 'SLIP',
+      });
+      if (!attErr && att) {
+        await reply(`🔗 สลิปนี้ยอดตรงกับ ${match.submission_number}: แนบเป็นสลิปโอนของรายการนั้นแล้ว ✅
+ถ้าเป็นการซื้อใหม่ ให้ส่งสลิปอีกครั้งและพิมพ์ "บิลใหม่" ใต้รูป`);
+        await sendCard(m.chat.id, await loadCard(admin, match.id), { appOrigin, manager });
+        if (photo && image && driveConfigured()) {
+          try {
+            const url = await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], {
+              kind: 'file', name: `${match.submission_number} ${KIND_LABEL.SLIP} ${update.update_id}.${image.mime.split('/')[1] ?? 'jpg'}`, mimeType: image.mime, data: photo,
+            });
+            await admin.rpc('set_attachment_drive_url', { p_id: att.id, p_url: url });
+          } catch (err) {
+            console.error('[telegram] slip drive upload failed', err);
+          }
+        }
+        return;
+      }
+    }
+  }
+
   const { data: bill, error } = await admin.rpc('submit_bill', {
     p_telegram_update_id: update.update_id, p_chat_id: m.chat.id, p_employee_id: employee.employee_id,
-    p_has_receipt: Boolean(image), p_photo_path: photoPath, p_message_text: text || null,
+    // A slip is proof of payment, not a receipt: the bill gets a substitute receipt on approval.
+    p_has_receipt: Boolean(image) && !slip, p_photo_path: photoPath, p_message_text: text || null,
     p_extraction: extraction as unknown as Json, p_extraction_error: read.ok ? null : read.error,
     p_vendor: extraction?.vendor ?? null, p_bill_date: typed.date ?? extraction?.bill_date ?? null, p_total: total,
   });
   if (error || !bill) throw new Error(`submit_bill: ${error?.message ?? 'no row'}`);
+  if (slip && photoPath) {
+    await admin.rpc('telegram_add_attachment', {
+      p_telegram_user_id: m.from.id, p_submission_number: bill.submission_number, p_path: photoPath, p_kind: 'SLIP',
+    });
+  }
 
   const link = `${appOrigin}/bills/${bill.id}`;
   const warnings = [
     extraction && !extraction.is_bill ? '⚠️ รูปนี้ไม่เหมือนบิล ผู้จัดการจะตรวจอีกครั้ง' : null,
+    slip ? 'ℹ️ นี่คือสลิปโอน ไม่ใช่บิล: จะออก "ใบรับรองแทนใบเสร็จ" ให้หลังอนุมัติ\nถ้าเป็นการจ่ายของบิลที่ส่งไปแล้ว ให้กด ❌ ยกเลิกรายการ แล้วแนบสลิปกับบิลเดิม' : null,
     !read.ok && image ? `⚠️ อ่านบิลอัตโนมัติไม่ได้\nสาเหตุ: ${aiErrorHint(read.error)}\n(${read.error.slice(0, 200)})` : null,
   ].filter(Boolean);
   if (warnings.length) await reply(warnings.join('\n'));

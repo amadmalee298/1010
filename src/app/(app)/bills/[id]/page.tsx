@@ -16,7 +16,7 @@ import { AttachmentUploader, BillReview, EditSubstituteButton, FileSubstituteBut
 import { MANAGEMENT } from '@/domain/permissions';
 import { formatAmount } from '@/domain/money';
 import { bangkokDate, formatDateTime } from '@/domain/datetime';
-import { aiErrorHint, billExtractionSchema, type BillExtraction } from '@/domain/bills';
+import { aiErrorHint, billAmountMissing, storedExtractionSchema, type BillExtraction } from '@/domain/bills';
 
 type ApprovedLine = { description: string; amount: number; ingredient_id?: string; quantity?: number; note?: string };
 
@@ -29,7 +29,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
   const [photo, ingredients, attachments] = await Promise.all([
     billPhotoUrl(db, bill.photo_path), listIngredients(db, { activeOnly: true, type: 'RAW' }), listAttachments(db, bill.id),
   ]);
-  const parsed = billExtractionSchema.safeParse(bill.extraction);
+  const parsed = storedExtractionSchema.safeParse(bill.extraction);
   const extraction: BillExtraction | null = parsed.success ? parsed.data : null;
   const B = t.bills;
   const approved = (Array.isArray(bill.approved_lines) ? bill.approved_lines : []) as unknown as ApprovedLine[];
@@ -96,6 +96,8 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               })),
             }}
             ingredients={ingredients.map((i) => ({ id: i.id, name: i.name_th, unit: i.unit }))}
+            // A transfer slip means the money left the bank, not the drawer.
+            defaultPayment={extraction?.is_slip || attachments.some((a) => a.kind === 'SLIP') ? 'TRANSFER' : 'CASH'}
           />
         ) : (
           <Card>
@@ -107,7 +109,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                   {approved.map((l, i) => (
                     <TR key={i}><TD>{l.description}{l.note ? <span className="block text-xs text-muted-foreground">{l.note}</span> : null}</TD><TD>{l.ingredient_id ? `${nameOf.get(l.ingredient_id) ?? ''} × ${l.quantity ?? ''}` : B.expensePart}</TD><TD className="text-right tabular-nums">{formatAmount(l.amount)}</TD></TR>
                   ))}
-                  <TR><TD colSpan={2} className="text-right font-semibold">{B.total}</TD><TD className="text-right font-semibold tabular-nums">{formatAmount(bill.total ?? 0)}</TD></TR>
+                  <TR><TD colSpan={2} className="text-right font-semibold">{B.total}</TD><TD className="text-right font-semibold tabular-nums">{billAmountMissing(bill.total) ? '—' : formatAmount(Number(bill.total))}</TD></TR>
                 </TBody>
               </Table>
               {bill.status === 'APPROVED' && !bill.voided_at ? (

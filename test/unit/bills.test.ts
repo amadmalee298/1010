@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiErrorHint, bahtText, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
+import { aiErrorHint, bahtText, billAmountMissing, extractionTotal, storedExtractionSchema, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
 
 describe('bahtText', () => {
   it.each([
@@ -90,5 +90,25 @@ describe('aiErrorHint', () => {
     expect(aiErrorHint('ANTHROPIC_API_KEY is invalid')).toMatch(/key ใหม่/);
     expect(aiErrorHint('Request timed out.')).toMatch(/นานเกินไป/);
     expect(aiErrorHint('something else')).toMatch(/กรอกยอดเอง/);
+  });
+});
+
+describe('bill amounts', () => {
+  const line = (amount: number) => ({ description: 'x', quantity: null, unit: null, amount, ingredient_id: null, ingredient_quantity: null });
+  it('stores null instead of 0 when nothing was read', () => {
+    expect(extractionTotal(null)).toBeNull();
+    expect(extractionTotal({ total: null, lines: [] })).toBeNull();
+    expect(extractionTotal({ total: 0, lines: [] })).toBeNull();
+    expect(extractionTotal({ total: null, lines: [line(40), line(60.5)] })).toBe(100.5);
+    expect(extractionTotal({ total: 710, lines: [] })).toBe(710);
+  });
+  it('treats null and 0 as missing everywhere', () => {
+    expect(billAmountMissing(null)).toBe(true);
+    expect(billAmountMissing(0)).toBe(true);
+    expect(billAmountMissing(99.75)).toBe(false);
+  });
+  it('reads extractions saved before is_slip existed', () => {
+    const old = { is_bill: true, vendor: null, bill_date: null, lines: [], total: 10, note: null };
+    expect(storedExtractionSchema.parse(old).is_slip).toBe(false);
   });
 });
