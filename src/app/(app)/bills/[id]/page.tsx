@@ -51,7 +51,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
       <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_1fr]">
         <div className="grid content-start gap-4">
           {photo ? (
-            <Card><CardHeader><CardTitle>{B.photo}</CardTitle></CardHeader>
+            <Card><CardHeader><CardTitle>{extraction?.is_slip ? B.slip : B.photo}</CardTitle></CardHeader>
               <CardContent>
                 {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
                 <a href={photo} target="_blank" rel="noreferrer"><img src={photo} alt={B.photo} className="w-full rounded-xl border border-border" /></a>
