@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { billCardButtons, billCardText, incomeDraftText, incomePostedText, kindFromCaption, parseCallback, parseCommand, parseIncomeCallback, parseIncomeText, parseLeadingDate, summaryText, type BillCard } from '@/domain/telegram';
+import { billCardButtons, billCardText, parseSlipCallback, slipMayPay, incomeDraftText, incomePostedText, kindFromCaption, parseCallback, parseCommand, parseIncomeCallback, parseIncomeText, parseLeadingDate, summaryText, type BillCard } from '@/domain/telegram';
 
 describe('parseCommand', () => {
   it('reads command, bot suffix and arguments', () => {
@@ -121,10 +121,37 @@ describe('bill card amount line', () => {
     expect(billCardText({ ...base, status: 'REJECTED', total: null })).toContain('📉 รายจ่าย  —');
     expect(billCardText({ ...base, voided: true })).not.toContain('รอกรอกยอด');
   });
-  it('shows money coming back once, with a plus', () => {
+  it('never shows a negative amount or a double minus', () => {
     const t = billCardText({ ...base, total: -120 });
-    expect(t).toContain('📈 รับคืน  +120.00 บาท');
+    expect(t).toContain('📉 รายจ่าย  (รอกรอกยอด)');
     expect(t).not.toContain('--');
     expect(billCardText({ ...base, total: 1060 })).toContain('📉 รายจ่าย  -1,060.00 บาท');
+  });
+  it('shows a slip photo as the slip, once', () => {
+    const t = billCardText({ ...base, has_receipt: false, has_photo: true, is_slip: true });
+    expect(t).toContain('📎 หลักฐาน: สลิปโอน 1');
+    expect(t).toContain('ออกเลขหลังอนุมัติ');
+  });
+});
+
+describe('slips that may pay an earlier bill', () => {
+  const bill = { total: 350, vendor: 'ร้านป้าแดง', bill_date: '2026-10-20', is_slip: false, has_slip: false };
+  const slip = { total: 350, vendor: 'นางสาว ป้าแดง', date: '2026-10-21' };
+  it('matches the same amount, shop and week', () => {
+    expect(slipMayPay(slip, bill)).toBe(true);
+    expect(slipMayPay({ ...slip, vendor: null, date: null }, bill)).toBe(true);
+  });
+  it('never matches a slip bill, a bill already paid by slip, another shop, another amount or a far date', () => {
+    expect(slipMayPay(slip, { ...bill, is_slip: true })).toBe(false);
+    expect(slipMayPay(slip, { ...bill, has_slip: true })).toBe(false);
+    expect(slipMayPay({ ...slip, vendor: 'ร้านลุงสมชาย' }, bill)).toBe(false);
+    expect(slipMayPay({ ...slip, total: 351 }, bill)).toBe(false);
+    expect(slipMayPay({ ...slip, date: '2026-11-05' }, bill)).toBe(false);
+    expect(slipMayPay(slip, { ...bill, total: null })).toBe(false);
+  });
+  it('parses the confirm buttons', () => {
+    expect(parseSlipCallback('slip:BL261031-0002:BL261030-0007')).toEqual({ action: 'slip_attach', slip: 'BL261031-0002', target: 'BL261030-0007' });
+    expect(parseSlipCallback('slipkeep:BL261031-0002')).toEqual({ action: 'slip_keep', slip: 'BL261031-0002' });
+    expect(parseSlipCallback('slip:BL1:x')).toBeNull();
   });
 });

@@ -171,14 +171,23 @@ export function aiErrorHint(error: string): string {
   return 'ผู้จัดการกรอกยอดเองในแอปได้ หรือลองส่งรูปใหม่';
 }
 
-/** One rule everywhere (bot card, bill list): a bill without a positive total still needs its amount. */
-export const billAmountMissing = (total: number | null | undefined): boolean => total == null || total === 0;
+/**
+ * One rule everywhere (bot card, bill list, bill page): a bill without a positive total still needs
+ * its amount. Bills never hold negative totals (the table forbids them); a refund is entered by hand.
+ */
+export const billAmountMissing = (total: number | null | undefined): boolean => total == null || !(Number(total) > 0);
 
-/** The bill total to store from an extraction: null when nothing was read, so it stays "amount missing". */
+/**
+ * The bill total to store from an extraction: a positive amount, or null when nothing usable was read
+ * (none, zero, or negative such as a refund slip), so the bill stays "amount missing" for a manager.
+ */
 export function extractionTotal(e: Pick<BillExtraction, 'total' | 'lines'> | null): number | null {
   if (!e) return null;
-  if (e.total != null && e.total !== 0) return round2(e.total);
-  if (e.lines.length === 0) return null;
-  const sum = round2(e.lines.reduce((s, l) => s + l.amount, 0));
-  return sum === 0 ? null : sum;
+  const raw = e.total != null && e.total !== 0 ? e.total : e.lines.reduce((s, l) => s + l.amount, 0);
+  const v = round2(raw);
+  return v > 0 ? v : null;
 }
+
+/** True when the AI read a negative amount (refund, credit note): the manager must check it. */
+export const extractionNegative = (e: Pick<BillExtraction, 'total' | 'lines'> | null): boolean =>
+  Boolean(e && ((e.total ?? 0) < 0 || (e.total == null && e.lines.reduce((s, l) => s + l.amount, 0) < 0)));

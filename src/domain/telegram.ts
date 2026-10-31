@@ -56,6 +56,9 @@ export interface BillCard {
   attachments: Record<CardKind, number>;
   company: string | null;
   submitter_chat_id: number | null;
+  /** The bill photo exists and is a bank transfer slip (shown as the slip, not as a receipt). */
+  has_photo?: boolean;
+  is_slip?: boolean;
 }
 
 const METHOD: Record<NonNullable<BillCard['paid_method']>, string> = { CASH: 'เงินสด', QR: 'QR', TRANSFER: 'โอน', CARD: 'บัตร' };
@@ -64,15 +67,10 @@ const amount = (n: number) => new Intl.NumberFormat('en-US', { minimumFractionDi
 const thaiDate = (iso: string) => new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' })
   .format(new Date(`${iso.slice(0, 10)}T12:00:00+07:00`));
 
-/**
- * "รายจ่าย -1,060.00 บาท". A pending bill without an amount asks for one; a closed bill never does.
- * A negative total (credit note, refund slip) is money coming back, shown with a plus.
- */
+/** "รายจ่าย -1,060.00 บาท". A pending bill without an amount asks for one; a closed bill never does. */
 function expenseLine(c: BillCard): string {
-  const t = c.total === null ? null : Number(c.total);
-  if (billAmountMissing(t)) return c.status === 'PENDING' && !c.voided ? '📉 รายจ่าย  (รอกรอกยอด)' : '📉 รายจ่าย  —';
-  const v = t as number;
-  return v > 0 ? `📉 รายจ่าย  -${amount(v)} บาท` : `📈 รับคืน  +${amount(-v)} บาท`;
+  if (billAmountMissing(c.total)) return c.status === 'PENDING' && !c.voided ? '📉 รายจ่าย  (รอกรอกยอด)' : '📉 รายจ่าย  —';
+  return `📉 รายจ่าย  -${amount(Number(c.total))} บาท`;
 }
 
 export function billCardText(c: BillCard): string {
@@ -90,7 +88,7 @@ export function billCardText(c: BillCard): string {
     : c.has_receipt ? 'บิล/ใบเสร็จ (รูป)'
     : cancelled ? 'ใบรับรองแทนใบเสร็จ (ไม่ได้ออก)' : 'ใบรับรองแทนใบเสร็จ (ออกเลขหลังอนุมัติ)';
   const evidence = [
-    c.has_receipt ? 'รูปบิล 1' : null,
+    c.has_receipt ? 'รูปบิล 1' : c.is_slip && c.has_photo ? `${KIND_LABEL.SLIP} 1` : null,
     ...(['SLIP', 'EVIDENCE', 'OTHER'] as const).filter((k) => c.attachments[k] > 0).map((k) => `${KIND_LABEL[k]} ${c.attachments[k]}`),
   ].filter(Boolean).join(' · ') || 'ยังไม่มี';
   const description = c.descriptions.length ? c.descriptions.join(', ') : (c.vendor ?? c.message_text ?? '—');
@@ -221,4 +219,36 @@ export function parseIncomeCallback(data: string | undefined): IncomeCallback | 
   const other = data?.match(new RegExp(`^(incx|incr):(${UUID})$`));
   if (!other) return null;
   return other[1] === 'incx' ? { action: 'income_discard', draft: other[2] ?? '' } : { action: 'income_reverse', draft: other[2] ?? '' };
+}
+
+/** Buttons offered when a new slip may pay an existing pending bill. */
+export type SlipCallback = { action: 'slip_attach'; slip: string; target: string } | { action: 'slip_keep'; slip: string };
+
+export function parseSlipCallback(data: string | undefined): SlipCallback | null {
+  const attach = data?.match(/^slip:(BL\d{6}-\d{4}):(BL\d{6}-\d{4})$/);
+  if (attach) return { action: 'slip_attach', slip: attach[1] ?? '', target: attach[2] ?? '' };
+  const keep = data?.match(/^slipkeep:(BL\d{6}-\d{4})$/);
+  return keep ? { action: 'slip_keep', slip: keep[1] ?? '' } : null;
+}
+
+/**
+ * Whether a pending bill could be the purchase a transfer slip pays: same amount, not itself a slip,
+ * no slip attached yet, the slip's recipient matching the bill's shop when both are known, and the
+ * transfer within 7 days of the bill date when both are known. The owner still confirms with a button.
+ */
+export function slipMayPay(
+  slip: { total: number; vendor: string | null; date: string | null },
+  bill: { total: number | null; vendor: string | null; bill_date: string | null; is_slip: boolean; has_slip: boolean },
+): boolean {
+  if (bill.is_slip || bill.has_slip || bill.total == null || Math.round(Number(bill.total) * 100) !== Math.round(slip.total * 100)) return false;
+  const norm = (v: string) => v.toLowerCase().replace(/[\s.()]|นาย|นางสาว|นาง|น\.ส|บริษัท|จำกัด|ร้าน|หจก/g, '');
+  if (slip.vendor && bill.vendor) {
+    const a = norm(slip.vendor), b = norm(bill.vendor);
+    if (a && b && !a.includes(b) && !b.includes(a)) return false;
+  }
+  if (slip.date && bill.bill_date) {
+    const days = Math.abs(Date.parse(slip.date) - Date.parse(bill.bill_date)) / 86_400_000;
+    if (!(days <= 7)) return false;
+  }
+  return true;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiErrorHint, bahtText, billAmountMissing, extractionTotal, storedExtractionSchema, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
+import { aiErrorHint, bahtText, billAmountMissing, extractionNegative, extractionTotal, storedExtractionSchema, formatTaxId, parseExpenseText, substituteReceiptHtml } from '@/domain/bills';
 
 describe('bahtText', () => {
   it.each([
@@ -101,6 +101,13 @@ describe('bill amounts', () => {
     expect(extractionTotal({ total: 0, lines: [] })).toBeNull();
     expect(extractionTotal({ total: null, lines: [line(40), line(60.5)] })).toBe(100.5);
     expect(extractionTotal({ total: 710, lines: [] })).toBe(710);
+  });
+  it('leaves refunds (negative) to the manager', () => {
+    expect(extractionTotal({ total: -200, lines: [] })).toBeNull();
+    expect(extractionTotal({ total: null, lines: [line(-50)] })).toBeNull();
+    expect(extractionNegative({ total: -200, lines: [] })).toBe(true);
+    expect(extractionNegative({ total: 200, lines: [] })).toBe(false);
+    expect(billAmountMissing(-5)).toBe(true);
   });
   it('treats null and 0 as missing everywhere', () => {
     expect(billAmountMissing(null)).toBe(true);

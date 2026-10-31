@@ -3,9 +3,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/lib/database.types';
 import { formatTHB } from '@/domain/money';
 import { bangkokDate } from '@/domain/datetime';
-import { aiErrorHint, extractionTotal, parseExpenseText, type BillExtraction } from '@/domain/bills';
+import { aiErrorHint, extractionNegative, extractionTotal, parseExpenseText, type BillExtraction } from '@/domain/bills';
 import { answerCallback, downloadFile, editMessage, pickImage, sendMessage, type TelegramCallbackQuery, type TelegramUpdate } from '@/server/integrations/telegram';
-import { incomeDraftText, incomePostedText, KIND_LABEL, kindFromCaption, parseCallback, parseIncomeCallback, parseIncomeText, parseLeadingDate, type CardKind } from '@/domain/telegram';
+import { incomeDraftText, incomePostedText, KIND_LABEL, kindFromCaption, parseCallback, parseIncomeCallback, parseIncomeText, parseLeadingDate, parseSlipCallback, slipMayPay, type CardKind } from '@/domain/telegram';
 import { loadCard, sendCard } from './telegram-card';
 import { readBill, type IngredientHint } from '@/server/integrations/bill-reader';
 import { HELP, parseCommand, runCommand } from './telegram-commands';
@@ -121,7 +121,7 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
   if (image) {
     await sendMessage(m.chat.id, 'กำลังอ่านบิล… ⏳');
     photo = await downloadFile(image.fileId);
-    const ext = image.mime.split('/')[1] ?? 'jpg';
+    const ext = fileExt(image.mime);
     photoPath = `bills/${bangkokDate().slice(0, 7)}/${update.update_id}.${ext}`;
     const { error } = await admin.storage.from('expense-receipts').upload(photoPath, photo, { contentType: image.mime, upsert: true });
     if (error) throw new Error(`storage upload: ${error.message}`);
@@ -140,63 +140,44 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
     return reply(`ไม่เข้าใจรายการ ลองพิมพ์รายการตามด้วยยอดเงิน เช่น "ค่ากุ้งสด ปลาหมึก 1060"\n\n${HELP}`);
   }
 
-  // null, not 0, when nothing was read: the bill then shows as "amount missing" everywhere.
+  // A positive amount or null ("amount missing"); a negative read (refund slip) is left to the manager.
   const total = extractionTotal(extraction);
-  const slip = Boolean(image && photoPath && extraction?.is_slip);
+  const slip = Boolean(image && extraction?.is_slip);
 
-  // A transfer slip usually pays a bill already sent: attach it there instead of booking the
-  // expense twice. Matched by the same sender and the same amount within 14 days;
-  // "บิลใหม่" in the caption skips the match.
-  if (slip && total && photoPath && !/บิลใหม่/.test(text)) {
-    const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
-    const { data: match } = await admin.from('bill_submissions').select('id, submission_number')
-      .eq('submitted_by', employee.employee_id).in('status', ['PENDING', 'APPROVED']).is('voided_at', null)
-      .eq('total', total).gte('created_at', since).order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (match) {
-      const { data: att, error: attErr } = await admin.rpc('telegram_add_attachment', {
-        p_telegram_user_id: m.from.id, p_submission_number: match.submission_number, p_path: photoPath, p_kind: 'SLIP',
-      });
-      if (!attErr && att) {
-        await reply(`🔗 สลิปนี้ยอดตรงกับ ${match.submission_number}: แนบเป็นสลิปโอนของรายการนั้นแล้ว ✅
-ถ้าเป็นการซื้อใหม่ ให้ส่งสลิปอีกครั้งและพิมพ์ "บิลใหม่" ใต้รูป`);
-        await sendCard(m.chat.id, await loadCard(admin, match.id), { appOrigin, manager });
-        if (photo && image && driveConfigured()) {
-          try {
-            const url = await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], {
-              kind: 'file', name: `${match.submission_number} ${KIND_LABEL.SLIP} ${update.update_id}.${image.mime.split('/')[1] ?? 'jpg'}`, mimeType: image.mime, data: photo,
-            });
-            await admin.rpc('set_attachment_drive_url', { p_id: att.id, p_url: url });
-          } catch (err) {
-            console.error('[telegram] slip drive upload failed', err);
-          }
-        }
-        return;
-      }
-    }
-  }
-
+  // Always record the message as its own bill first: Telegram retries the same update_id, and the
+  // check above then skips it. A slip is proof of payment, not a receipt, so it gets a substitute
+  // receipt on approval; its photo is the bill photo and is not stored a second time.
   const { data: bill, error } = await admin.rpc('submit_bill', {
     p_telegram_update_id: update.update_id, p_chat_id: m.chat.id, p_employee_id: employee.employee_id,
-    // A slip is proof of payment, not a receipt: the bill gets a substitute receipt on approval.
     p_has_receipt: Boolean(image) && !slip, p_photo_path: photoPath, p_message_text: text || null,
     p_extraction: extraction as unknown as Json, p_extraction_error: read.ok ? null : read.error,
     p_vendor: extraction?.vendor ?? null, p_bill_date: typed.date ?? extraction?.bill_date ?? null, p_total: total,
   });
   if (error || !bill) throw new Error(`submit_bill: ${error?.message ?? 'no row'}`);
-  if (slip && photoPath) {
-    await admin.rpc('telegram_add_attachment', {
-      p_telegram_user_id: m.from.id, p_submission_number: bill.submission_number, p_path: photoPath, p_kind: 'SLIP',
-    });
-  }
 
   const link = `${appOrigin}/bills/${bill.id}`;
   const warnings = [
     extraction && !extraction.is_bill ? '⚠️ รูปนี้ไม่เหมือนบิล ผู้จัดการจะตรวจอีกครั้ง' : null,
-    slip ? 'ℹ️ นี่คือสลิปโอน ไม่ใช่บิล: จะออก "ใบรับรองแทนใบเสร็จ" ให้หลังอนุมัติ\nถ้าเป็นการจ่ายของบิลที่ส่งไปแล้ว ให้กด ❌ ยกเลิกรายการ แล้วแนบสลิปกับบิลเดิม' : null,
+    extractionNegative(extraction) ? '⚠️ ยอดติดลบ (เงินคืน / ใบลดหนี้): ผู้จัดการจะกรอกยอดเอง' : null,
+    slip ? 'ℹ️ นี่คือสลิปโอน ไม่ใช่บิล: จะออก "ใบรับรองแทนใบเสร็จ" ให้หลังอนุมัติ' : null,
     !read.ok && image ? `⚠️ อ่านบิลอัตโนมัติไม่ได้\nสาเหตุ: ${aiErrorHint(read.error)}\n(${read.error.slice(0, 200)})` : null,
   ].filter(Boolean);
   if (warnings.length) await reply(warnings.join('\n'));
   await sendCard(m.chat.id, await loadCard(admin, bill.id), { replyTo: m.message_id, appOrigin, manager });
+
+  // The slip may pay a bill sent earlier: ask, never attach on a guess (a second purchase of the same
+  // amount, or a slip to another shop, must stay its own expense).
+  if (slip && total) {
+    const target = await pendingBillPaidBy(admin, employee.employee_id, bill.id, { total, vendor: extraction?.vendor ?? null, date: extraction?.bill_date ?? null });
+    if (target) {
+      await sendMessage(m.chat.id,
+        `🔗 สลิปนี้อาจเป็นการจ่ายของ ${target.submission_number}${target.vendor ? ` (${target.vendor})` : ''} ยอด ${formatTHB(total)}\nถ้าใช่ กดแนบ แล้ว ${bill.submission_number} จะถูกยกเลิก (ไม่บันทึกรายจ่ายซ้ำ)`,
+        undefined, { inline_keyboard: [[
+          { text: `🔗 แนบกับ ${target.submission_number}`, callback_data: `slip:${bill.submission_number}:${target.submission_number}` },
+          { text: '✅ เป็นรายการใหม่', callback_data: `slipkeep:${bill.submission_number}` },
+        ]] });
+    }
+  }
 
   for (const chat of await managerChats(admin)) {
     if (chat === m.chat.id) continue;
@@ -204,16 +185,41 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
   }
 
   // Keep a copy of the photo in Google Drive (best effort; the app keeps the original either way).
-  if (photo && image && driveConfigured()) {
-    try {
-      const url = await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], {
-        kind: 'file', name: `${bill.submission_number}.${image.mime.split('/')[1] ?? 'jpg'}`, mimeType: image.mime, data: photo,
-      });
-      await admin.from('bill_submissions').update({ photo_url: url }).eq('id', bill.id);
-    } catch (err) {
-      console.error('[telegram] drive upload failed', err);
-    }
+  if (photo && image) {
+    const url = await copyToDrive(`${bill.submission_number}.${fileExt(image.mime)}`, image.mime, photo);
+    if (url) await admin.from('bill_submissions').update({ photo_url: url }).eq('id', bill.id);
   }
+}
+
+const fileExt = (mime: string) => mime.split('/')[1] ?? 'jpg';
+
+/** Copies a photo into "<month>/รูปบิล" in Google Drive; returns its link, or null (not set up or failed). */
+async function copyToDrive(name: string, mimeType: string, data: Buffer): Promise<string | null> {
+  if (!driveConfigured()) return null;
+  try {
+    return await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], { kind: 'file', name, mimeType, data });
+  } catch (err) {
+    console.error('[telegram] drive upload failed', name, err);
+    return null;
+  }
+}
+
+/** The most recent pending bill from the same sender (14 days) that this slip could pay, if any. */
+async function pendingBillPaidBy(
+  admin: Admin, employeeId: string, slipBillId: string, slip: { total: number; vendor: string | null; date: string | null },
+): Promise<{ submission_number: string; vendor: string | null } | null> {
+  const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+  const { data: bills } = await admin.from('bill_submissions').select('id, submission_number, vendor, bill_date, total, extraction')
+    .eq('submitted_by', employeeId).eq('status', 'PENDING').is('voided_at', null).neq('id', slipBillId)
+    .gte('created_at', since).order('created_at', { ascending: false }).limit(20);
+  if (!bills?.length) return null;
+  const { data: slips } = await admin.from('bill_attachments').select('bill_id').eq('kind', 'SLIP').in('bill_id', bills.map((b) => b.id));
+  const withSlip = new Set((slips ?? []).map((a) => a.bill_id));
+  const isSlip = (e: unknown) => Boolean(e && typeof e === 'object' && (e as { is_slip?: unknown }).is_slip === true);
+  return bills.find((b) => slipMayPay(slip, {
+    total: b.total === null ? null : Number(b.total), vendor: b.vendor, bill_date: b.bill_date,
+    is_slip: isSlip(b.extraction), has_slip: withSlip.has(b.id),
+  })) ?? null;
 }
 
 async function attachToBill(
@@ -222,8 +228,11 @@ async function attachToBill(
   view: { appOrigin: string; manager: boolean },
 ): Promise<void> {
   const data = await downloadFile(image.fileId);
-  const ext = image.mime.split('/')[1] ?? 'jpg';
+  const ext = fileExt(image.mime);
   const path = `bills/${bangkokDate().slice(0, 7)}/${submissionNumber}-att-${ctx.updateId}.${ext}`;
+  // Telegram retries an update it thinks failed; the path carries the update id, so a retry is a no-op.
+  const { data: seen } = await admin.from('bill_attachments').select('id').eq('path', path).maybeSingle();
+  if (seen) return;
   const { error: upErr } = await admin.storage.from('expense-receipts').upload(path, data, { contentType: image.mime, upsert: true });
   if (upErr) throw new Error(`storage upload: ${upErr.message}`);
   const { data: row, error } = await admin.rpc('telegram_add_attachment', {
@@ -235,16 +244,43 @@ async function attachToBill(
   }
   await sendMessage(ctx.chatId, `แนบ${KIND_LABEL[kind]}กับ ${submissionNumber} แล้ว ✅`, ctx.replyTo);
   await sendCard(ctx.chatId, await loadCard(admin, row.bill_id), view);
-  if (driveConfigured()) {
-    try {
-      const url = await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], {
-        kind: 'file', name: `${submissionNumber} ${KIND_LABEL[kind]} ${ctx.updateId}.${ext}`, mimeType: image.mime, data,
-      });
-      await admin.rpc('set_attachment_drive_url', { p_id: row.id, p_url: url });
-    } catch (err) {
-      console.error('[telegram] attachment drive upload failed', err);
-    }
+  const url = await copyToDrive(`${submissionNumber} ${KIND_LABEL[kind]} ${ctx.updateId}.${ext}`, image.mime, data);
+  if (url) await admin.rpc('set_attachment_drive_url', { p_id: row.id, p_url: url });
+}
+
+/** "แนบกับ BL…" / "เป็นรายการใหม่" under a slip that may pay an earlier bill. */
+async function handleSlipCallback(admin: Admin, q: TelegramCallbackQuery, action: NonNullable<ReturnType<typeof parseSlipCallback>>, appOrigin: string): Promise<void> {
+  const chatId = q.message?.chat.id;
+  const messageId = q.message?.message_id;
+  if (!chatId || !messageId) return answerCallback(q.id);
+  if (action.action === 'slip_keep') {
+    await answerCallback(q.id, 'เก็บเป็นรายการใหม่');
+    await editMessage(chatId, messageId, `✅ ${action.slip} เป็นรายการใหม่ (ไม่แนบกับบิลเดิม)`).catch(() => undefined);
+    return;
   }
+  const { data: who } = await admin.rpc('telegram_staff', { p_telegram_user_id: q.from.id });
+  const manager = who?.[0]?.role === 'OWNER' || who?.[0]?.role === 'MANAGER';
+  // Only while the slip's own bill is still pending: a second press, or a bill handled in the app, does nothing.
+  const { data: slipBill } = await admin.from('bill_submissions').select('photo_path, status, voided_at')
+    .eq('submission_number', action.slip).maybeSingle();
+  if (!slipBill?.photo_path || slipBill.status !== 'PENDING' || slipBill.voided_at) {
+    await answerCallback(q.id, 'รายการนี้ทำไปแล้ว');
+    return;
+  }
+  const { data: att, error: attErr } = await admin.rpc('telegram_add_attachment', {
+    p_telegram_user_id: q.from.id, p_submission_number: action.target, p_path: slipBill.photo_path, p_kind: 'SLIP',
+  });
+  if (attErr || !att) {
+    await answerCallback(q.id);
+    await editMessage(chatId, messageId, `แนบไม่ได้: ไม่พบ ${action.target} หรือคุณไม่ใช่ผู้ส่งบิลนี้ (${action.slip} ยังเป็นรายการแยก)`).catch(() => undefined);
+    return;
+  }
+  const { error: cancelErr } = await admin.rpc('telegram_cancel_bill', { p_telegram_user_id: q.from.id, p_submission_number: action.slip });
+  await answerCallback(q.id, 'แนบสลิปแล้ว');
+  await editMessage(chatId, messageId, cancelErr
+    ? `🔗 แนบสลิปกับ ${action.target} แล้ว ✅\n⚠️ ยกเลิก ${action.slip} ไม่ได้: กด ❌ ยกเลิกรายการ ที่ข้อความของ ${action.slip} เอง`
+    : `🔗 แนบสลิปกับ ${action.target} แล้ว ✅ และยกเลิก ${action.slip} (ไม่บันทึกรายจ่ายซ้ำ)`).catch(() => undefined);
+  await sendCard(chatId, await loadCard(admin, att.bill_id), { appOrigin, manager });
 }
 
 async function companyName(admin: Admin): Promise<string | null> {
@@ -290,6 +326,11 @@ async function handleIncomeCallback(admin: Admin, q: TelegramCallbackQuery, acti
 
 /** Inline buttons under a bill card. */
 async function handleCallback(admin: Admin, q: TelegramCallbackQuery, appOrigin: string): Promise<void> {
+  const slipAction = parseSlipCallback(q.data);
+  if (slipAction) {
+    if (q.message?.chat.type !== 'private') return answerCallback(q.id);
+    return handleSlipCallback(admin, q, slipAction, appOrigin);
+  }
   const incomeAction = parseIncomeCallback(q.data);
   if (incomeAction) {
     if (q.message?.chat.type !== 'private') return answerCallback(q.id);

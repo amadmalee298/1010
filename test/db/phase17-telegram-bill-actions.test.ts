@@ -52,6 +52,7 @@ describe.skipIf(!hasDb)('Phase 17: bill actions from Telegram', () => {
     expect(c.approver_signed).toBe(false);
     expect(c.company).toBe('บริษัท กะเพรา เอ็นเตอร์ไพรส์ จำกัด (สำนักงานใหญ่)');
     expect(Number(c.submitter_chat_id)).toBe(91);
+    expect((c as unknown as { has_photo: boolean; is_slip: boolean }).is_slip).toBe(false);
     // only the submitter or a manager may see it
     await expect(card(92, b.submission_number)).rejects.toThrow(/NOT_FOUND/);
     expect((await card(93, b.submission_number)).submission_number).toBe(b.submission_number);
