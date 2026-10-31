@@ -109,12 +109,22 @@ describe('typed dates and income', () => {
   });
 });
 
-describe('bill card without an amount', () => {
-  it('asks for the amount instead of showing -0.00', () => {
-    const c = { id: 'b', submission_number: 'BL261028-0001', status: 'PENDING' as const, voided: false, void_reason: null, review_note: null,
-      total: 0, descriptions: [], message_text: null, vendor: null, bill_date: '2026-10-28', has_receipt: true, substitute_number: null,
-      payer_name: null, payer_signed: false, approver_signed: false, paid_method: null, paid_from_drawer: null, category: null,
-      attachments: { SLIP: 0, EVIDENCE: 0, OTHER: 0 }, company: null, submitter_chat_id: null } satisfies BillCard;
-    expect(billCardText(c)).toContain('📉 รายจ่าย  (รอกรอกยอด)');
+describe('bill card amount line', () => {
+  const base = { id: 'b', submission_number: 'BL261028-0001', status: 'PENDING' as const, voided: false, void_reason: null, review_note: null,
+    total: 0 as number | null, descriptions: [] as string[], message_text: null, vendor: null, bill_date: '2026-10-28', has_receipt: true,
+    substitute_number: null, payer_name: null, payer_signed: false, approver_signed: false, paid_method: null, paid_from_drawer: null,
+    category: null, attachments: { SLIP: 0, EVIDENCE: 0, OTHER: 0 }, company: null, submitter_chat_id: null } satisfies BillCard;
+  it('asks for the amount only while the bill is pending', () => {
+    expect(billCardText(base)).toContain('📉 รายจ่าย  (รอกรอกยอด)');
+    expect(billCardText({ ...base, total: null })).toContain('📉 รายจ่าย  (รอกรอกยอด)');
+    expect(billCardText({ ...base, status: 'APPROVED' })).toContain('📉 รายจ่าย  —');
+    expect(billCardText({ ...base, status: 'REJECTED', total: null })).toContain('📉 รายจ่าย  —');
+    expect(billCardText({ ...base, voided: true })).not.toContain('รอกรอกยอด');
+  });
+  it('shows money coming back once, with a plus', () => {
+    const t = billCardText({ ...base, total: -120 });
+    expect(t).toContain('📈 รับคืน  +120.00 บาท');
+    expect(t).not.toContain('--');
+    expect(billCardText({ ...base, total: 1060 })).toContain('📉 รายจ่าย  -1,060.00 บาท');
   });
 });

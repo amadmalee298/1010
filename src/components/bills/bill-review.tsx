@@ -18,8 +18,9 @@ import { formatAmount, sumBaht } from '@/domain/money';
 interface Line { description: string; amount: number | ''; ingredient_id: string; quantity: number | '' | null; onBill?: string; note?: string }
 interface IngredientOption { id: string; name: string; unit: string }
 
-export function BillReview({ billId, defaults, ingredients }: {
+export function BillReview({ billId, defaults, ingredients, defaultPayment = 'CASH' }: {
   billId: string;
+  defaultPayment?: 'CASH' | 'TRANSFER';
   defaults: { bill_date: string; vendor: string; lines: Line[] };
   ingredients: IngredientOption[];
 }) {
@@ -100,7 +101,7 @@ export function BillReview({ billId, defaults, ingredients }: {
               </NativeSelect>
             </Field>
             <Field label={t.expenses.method}>
-              <NativeSelect name="payment_method" defaultValue="CASH">
+              <NativeSelect name="payment_method" defaultValue={defaultPayment}>
                 {(['CASH', 'TRANSFER', 'QR', 'CARD'] as const).map((m) => <option key={m} value={m}>{t.pos.method[m]}</option>)}
               </NativeSelect>
             </Field>

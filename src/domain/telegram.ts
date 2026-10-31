@@ -1,4 +1,5 @@
 import { formatTHB } from './money';
+import { billAmountMissing } from './bills';
 
 /** Pure helpers for the Telegram bot replies. */
 
@@ -63,6 +64,17 @@ const amount = (n: number) => new Intl.NumberFormat('en-US', { minimumFractionDi
 const thaiDate = (iso: string) => new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' })
   .format(new Date(`${iso.slice(0, 10)}T12:00:00+07:00`));
 
+/**
+ * "รายจ่าย -1,060.00 บาท". A pending bill without an amount asks for one; a closed bill never does.
+ * A negative total (credit note, refund slip) is money coming back, shown with a plus.
+ */
+function expenseLine(c: BillCard): string {
+  const t = c.total === null ? null : Number(c.total);
+  if (billAmountMissing(t)) return c.status === 'PENDING' && !c.voided ? '📉 รายจ่าย  (รอกรอกยอด)' : '📉 รายจ่าย  —';
+  const v = t as number;
+  return v > 0 ? `📉 รายจ่าย  -${amount(v)} บาท` : `📈 รับคืน  +${amount(-v)} บาท`;
+}
+
 export function billCardText(c: BillCard): string {
   const cancelled = c.voided || c.status === 'REJECTED';
   const head = c.voided ? '🚫 ยกเลิกรายการแล้ว'
@@ -87,7 +99,7 @@ export function billCardText(c: BillCard): string {
     `${head}`,
     `🔖 ${c.submission_number}`,
     '━━━━━━━━━━━━━━',
-    c.total ? `📉 รายจ่าย  -${amount(c.total)} บาท` : '📉 รายจ่าย  (รอกรอกยอด)',
+    expenseLine(c),
     `📝 ${description}`,
     c.vendor && c.descriptions.length ? `🏪 ร้าน: ${c.vendor}` : null,
     '',

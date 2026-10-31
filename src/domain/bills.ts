@@ -62,7 +62,8 @@ export const billLineSchema = z.object({
     .describe('Quantity converted to that ingredient\'s unit (e.g. 2 กก. → 2000 when the unit is กรัม), or null'),
 });
 export const billExtractionSchema = z.object({
-  is_bill: z.boolean().describe('false when the image is not a receipt, bill or invoice'),
+  is_bill: z.boolean().describe('true for a receipt, bill, invoice or bank transfer slip; false for anything else'),
+  is_slip: z.boolean().describe('true when the image is a bank transfer / PromptPay slip (proof of payment, not an itemised bill)'),
   vendor: z.string().nullable(),
   bill_date: z.string().nullable().describe('Date on the bill as YYYY-MM-DD (Gregorian; convert Buddhist-era years by subtracting 543)'),
   lines: z.array(billLineSchema),
@@ -71,6 +72,8 @@ export const billExtractionSchema = z.object({
 });
 export type BillLine = z.infer<typeof billLineSchema>;
 export type BillExtraction = z.infer<typeof billExtractionSchema>;
+/** Extractions saved before is_slip existed parse as "not a slip". */
+export const storedExtractionSchema = billExtractionSchema.extend({ is_slip: z.boolean().default(false) });
 
 /** "ค่ากุ้งสด ปลาหมึก 1,060" → one line. Used for text messages when the AI is unavailable. */
 export function parseExpenseText(text: string): BillExtraction | null {
@@ -80,7 +83,7 @@ export function parseExpenseText(text: string): BillExtraction | null {
   const amount = Number((m[2] ?? '').replace(/,/g, ''));
   if (!description || !Number.isFinite(amount) || amount <= 0) return null;
   return {
-    is_bill: true, vendor: null, bill_date: null, total: round2(amount), note: null,
+    is_bill: true, is_slip: false, vendor: null, bill_date: null, total: round2(amount), note: null,
     lines: [{ description, quantity: null, unit: null, amount: round2(amount), ingredient_id: null, ingredient_quantity: null }],
   };
 }
@@ -166,4 +169,16 @@ export function aiErrorHint(error: string): string {
   if (/image|too large|size/i.test(error)) return 'รูปใหญ่หรือเปิดไม่ได้ ลองส่งเป็นรูปภาพปกติ (ไม่ใช่ไฟล์) อีกครั้ง';
   if (/declined|refusal/i.test(error)) return 'AI ไม่อ่านรูปนี้ ผู้จัดการกรอกยอดเองในแอป';
   return 'ผู้จัดการกรอกยอดเองในแอปได้ หรือลองส่งรูปใหม่';
+}
+
+/** One rule everywhere (bot card, bill list): a bill without a positive total still needs its amount. */
+export const billAmountMissing = (total: number | null | undefined): boolean => total == null || total === 0;
+
+/** The bill total to store from an extraction: null when nothing was read, so it stays "amount missing". */
+export function extractionTotal(e: Pick<BillExtraction, 'total' | 'lines'> | null): number | null {
+  if (!e) return null;
+  if (e.total != null && e.total !== 0) return round2(e.total);
+  if (e.lines.length === 0) return null;
+  const sum = round2(e.lines.reduce((s, l) => s + l.amount, 0));
+  return sum === 0 ? null : sum;
 }

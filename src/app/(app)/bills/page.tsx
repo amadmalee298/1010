@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { MANAGEMENT } from '@/domain/permissions';
 import { formatAmount } from '@/domain/money';
+import { billAmountMissing } from '@/domain/bills';
 import { formatDate, formatDateTime } from '@/domain/datetime';
 import { cn } from '@/lib/utils';
 import type { BillStatus } from '@/lib/database.types';
@@ -48,7 +49,7 @@ export default async function BillsPage({ searchParams }: { searchParams: Promis
                   {b.voided_at ? <Badge variant="destructive" className="ml-1">{t.bills.voided}</Badge> : null}
                   {b.extraction_error ? <Badge variant="destructive" className="ml-1">{t.bills.aiFailed}</Badge> : null}
                 </TD>
-                <TD className="text-right tabular-nums">{b.total !== null ? formatAmount(b.total) : '—'}</TD>
+                <TD className="text-right tabular-nums">{billAmountMissing(b.total) ? '—' : formatAmount(Number(b.total))}</TD>
               </TR>
             ))}
           </TBody>

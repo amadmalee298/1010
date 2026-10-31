@@ -19,10 +19,11 @@ const SYSTEM = `You read purchase bills for a Thai dessert shop and return struc
   into that ingredient's unit in ingredient_quantity (1 กก. = 1000 กรัม, 1 ลิตร = 1000 มล., 1 แผง = 30 ฟอง unless the bill says otherwise).
   When unsure, leave ingredient_id null rather than guessing.
 - Dates: return YYYY-MM-DD in the Gregorian calendar (Buddhist-era year minus 543).
-- A bank transfer slip (โอนเงินสำเร็จ / PromptPay) is proof of payment: set is_bill to true, vendor to the
+- A bank transfer slip (โอนเงินสำเร็จ / PromptPay) is proof of payment: set is_bill and is_slip to true, vendor to the
   recipient's name, bill_date to the transfer date, and one line with the transferred amount, described as
   "โอนเงินให้ <recipient>" (add the memo if the slip shows one). Say in note that it is a slip, not an itemised bill.
 - If the image is neither a bill, a receipt nor a transfer slip, set is_bill to false and return no lines.
+- is_slip is false for every bill, receipt or invoice, and for typed messages.
 - Put anything doubtful (unreadable amounts, totals that do not add up) in note, in Thai.`;
 
 function ingredientList(ingredients: readonly IngredientHint[]): string {
