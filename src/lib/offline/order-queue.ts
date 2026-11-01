@@ -36,8 +36,11 @@ export function subscribeQueue(listener: Listener): () => void {
 }
 
 export function enqueueOrder(payload: CreateOrderInput, total: number): QueuedOrder {
+  const createdAt = new Date().toISOString();
   const entry: QueuedOrder = {
-    clientRef: payload.client_ref, payload, total, createdAt: new Date().toISOString(), attempts: 0, status: 'PENDING', lastError: null,
+    // sold_at keeps the sale on the day it happened, however late the queue syncs.
+    clientRef: payload.client_ref, payload: { ...payload, sold_at: payload.sold_at ?? createdAt }, total, createdAt,
+    attempts: 0, status: 'PENDING', lastError: null,
   };
   save([...getQueue().filter((q) => q.clientRef !== entry.clientRef), entry]);
   return entry;

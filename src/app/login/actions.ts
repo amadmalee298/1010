@@ -36,7 +36,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     await supabase.auth.signOut();
     return { error: t.auth.notEmployee };
   }
-  const next = parsed.data.next && !parsed.data.next.startsWith('//') ? parsed.data.next : homePathFor(role);
+  const next = safeNextPath(parsed.data.next) ?? homePathFor(role);
   redirect(next);
 }
 
@@ -44,4 +44,18 @@ export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect('/login');
+}
+
+/**
+ * Only a path on this site: "/orders?x=1". Rejects "//evil.com", "/\\evil.com" (browsers read a
+ * backslash as a slash), control characters and anything with a scheme.
+ */
+function safeNextPath(next: string | null | undefined): string | null {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || /[\\\u0000-\u001f]/.test(next)) return null;
+  try {
+    const url = new URL(next, 'http://local.invalid');
+    return url.origin === 'http://local.invalid' ? `${url.pathname}${url.search}${url.hash}` : null;
+  } catch {
+    return null;
+  }
 }

@@ -186,18 +186,22 @@ export async function handleTelegramUpdate(admin: Admin, update: TelegramUpdate,
 
   // Keep a copy of the photo in Google Drive (best effort; the app keeps the original either way).
   if (photo && image) {
-    const url = await copyToDrive(`${bill.submission_number}.${fileExt(image.mime)}`, image.mime, photo);
+    const url = await copyToDrive(`${bill.submission_number}.${fileExt(image.mime)}`, image.mime, photo,
+      bill.bill_date ?? bangkokDate());
     if (url) await admin.from('bill_submissions').update({ photo_url: url }).eq('id', bill.id);
   }
 }
 
 const fileExt = (mime: string) => mime.split('/')[1] ?? 'jpg';
 
-/** Copies a photo into "<month>/รูปบิล" in Google Drive; returns its link, or null (not set up or failed). */
-async function copyToDrive(name: string, mimeType: string, data: Buffer): Promise<string | null> {
+/**
+ * Copies a photo into "<bill month>/รูปบิล" in Google Drive (the same month folder as the bill's
+ * substitute receipt and app attachments); returns its link, or null (not set up or failed).
+ */
+async function copyToDrive(name: string, mimeType: string, data: Buffer, billDate: string): Promise<string | null> {
   if (!driveConfigured()) return null;
   try {
-    return await uploadToDrive([...monthFolder(bangkokDate()), 'รูปบิล'], { kind: 'file', name, mimeType, data });
+    return await uploadToDrive([...monthFolder(billDate), 'รูปบิล'], { kind: 'file', name, mimeType, data });
   } catch (err) {
     console.error('[telegram] drive upload failed', name, err);
     return null;
@@ -243,8 +247,9 @@ async function attachToBill(
     return;
   }
   await sendMessage(ctx.chatId, `แนบ${KIND_LABEL[kind]}กับ ${submissionNumber} แล้ว ✅`, ctx.replyTo);
-  await sendCard(ctx.chatId, await loadCard(admin, row.bill_id), view);
-  const url = await copyToDrive(`${submissionNumber} ${KIND_LABEL[kind]} ${ctx.updateId}.${ext}`, image.mime, data);
+  const card = await loadCard(admin, row.bill_id);
+  await sendCard(ctx.chatId, card, view);
+  const url = await copyToDrive(`${submissionNumber} ${KIND_LABEL[kind]} ${ctx.updateId}.${ext}`, image.mime, data, card.bill_date);
   if (url) await admin.rpc('set_attachment_drive_url', { p_id: row.id, p_url: url });
 }
 
@@ -265,6 +270,15 @@ async function handleSlipCallback(admin: Admin, q: TelegramCallbackQuery, action
     .eq('submission_number', action.slip).maybeSingle();
   if (!slipBill?.photo_path || slipBill.status !== 'PENDING' || slipBill.voided_at) {
     await answerCallback(q.id, 'รายการนี้ทำไปแล้ว');
+    return;
+  }
+  // The earlier bill must still be waiting for approval: a rejected or voided bill can never be
+  // approved, so moving the slip there would drop the payment from the books.
+  const { data: target } = await admin.from('bill_submissions').select('status, voided_at')
+    .eq('submission_number', action.target).maybeSingle();
+  if (!target || target.status !== 'PENDING' || target.voided_at) {
+    await answerCallback(q.id);
+    await editMessage(chatId, messageId, `แนบไม่ได้: ${action.target} ถูกอนุมัติหรือยกเลิกไปแล้ว ${action.slip} จึงยังเป็นรายการแยก (ไม่มีอะไรหาย)`).catch(() => undefined);
     return;
   }
   const { data: att, error: attErr } = await admin.rpc('telegram_add_attachment', {
@@ -294,7 +308,7 @@ async function handleIncomeCallback(admin: Admin, q: TelegramCallbackQuery, acti
   const chatId = q.message?.chat.id;
   const messageId = q.message?.message_id;
   if (!chatId || !messageId) return answerCallback(q.id);
-  const denied = (msg: string) => answerCallback(q.id, /FORBIDDEN/.test(msg) ? 'เฉพาะเจ้าของร้านและผู้จัดการ' : /INVALID_STATE/.test(msg) ? 'รายการนี้ทำไปแล้ว' : 'ไม่พบรายการนี้');
+  const denied = (msg: string) => answerCallback(q.id, /FORBIDDEN/.test(msg) ? 'เฉพาะเจ้าของร้านและผู้จัดการ' : /INVALID_STATE|duplicate|unique/i.test(msg) ? 'รายการนี้ทำไปแล้ว' : 'ไม่พบรายการนี้');
 
   if (action.action === 'income_discard') {
     const { error } = await admin.rpc('telegram_discard_income', { p_telegram_user_id: q.from.id, p_draft: action.draft });
