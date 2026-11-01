@@ -39,7 +39,9 @@ export async function readBill(input: {
   ingredients: readonly IngredientHint[];
 }): Promise<ReadResult> {
   if (!billReaderConfigured()) return { ok: false, error: 'ANTHROPIC_API_KEY is not set' };
-  const client = new Anthropic({ timeout: 55_000, maxRetries: 1 });
+  // The webhook has 60 s in total (photo download, storage, AI, saving the bill). One try that
+  // stops at 35 s leaves time to save the bill and tell the sender when the AI is slow.
+  const client = new Anthropic({ timeout: 35_000, maxRetries: 0 });
   const content: Anthropic.Beta.BetaContentBlockParam[] = [];
   if (input.image) {
     content.push({ type: 'image', source: { type: 'base64', media_type: input.image.mime, data: input.image.data.toString('base64') } });

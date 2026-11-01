@@ -20,7 +20,8 @@ export interface PaymentCheck {
 
 export function checkPayments(total: number, lines: readonly PaymentLine[]): PaymentCheck {
   for (const l of lines) {
-    if (!(l.amount > 0) || toSatang(l.amount) !== Math.round(l.amount * 100)) {
+    // At most 2 decimals: the amount in satang must be a whole number (float noise allowed).
+    if (!(l.amount > 0) || Math.abs(l.amount * 100 - toSatang(l.amount)) > 1e-6) {
       return { paid: 0, remaining: total, change: 0, valid: false, error: 'INVALID_AMOUNT' };
     }
     if (l.method === 'CASH' && l.tendered !== undefined && l.tendered < l.amount) {
