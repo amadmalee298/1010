@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { money, optionalText, optionalUuid, positiveMoney, quantity, requiredText, uuid } from './common';
+import { money, optionalText, optionalUuid, positiveMoney, quantity, requiredText, unitCost, uuid } from './common';
 
 export const paymentMethod = z.enum(['CASH', 'QR', 'TRANSFER', 'CARD']);
 
@@ -36,7 +36,7 @@ export const refundOrderSchema = z.object({
   items: z.array(z.object({ order_item_id: uuid, quantity: z.coerce.number().int().min(1) })).min(1),
 });
 
-export const stockAdjustSchema = z.object({ ingredient_id: uuid, delta: z.coerce.number().finite().refine((v) => v !== 0), unit_cost: money.optional(), note: requiredText(300) });
+export const stockAdjustSchema = z.object({ ingredient_id: uuid, delta: z.coerce.number().finite().refine((v) => v !== 0), unit_cost: unitCost.optional(), note: requiredText(300) });
 export const stockCountSchema = z.object({ ingredient_id: uuid, counted: z.coerce.number().finite().min(0), note: optionalText(300) });
 export const wasteSchema = z.object({ ingredient_id: uuid, quantity, reason: requiredText(300) });
 
