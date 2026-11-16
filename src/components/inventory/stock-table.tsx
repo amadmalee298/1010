@@ -19,6 +19,8 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
   const { t } = useI18n();
   const [target, setTarget] = useState<{ item: StockLevelRow; mode: Mode } | null>(null);
   const [filter, setFilter] = useState('');
+  // iPhone number pads have no minus key, so the direction is a toggle and the amount is always positive.
+  const [direction, setDirection] = useState<'in' | 'out'>('in');
   const count = useAction(stockCountAction);
   const adjust = useAction(adjustStockAction);
   const waste = useAction(recordWasteAction);
@@ -27,7 +29,13 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
 
   async function submit(form: HTMLFormElement) {
     if (!target) return;
-    const data = { ...formToObject(form), ingredient_id: target.item.id };
+    const data: Record<string, unknown> = { ...formToObject(form), ingredient_id: target.item.id };
+    if (target.mode === 'adjust') {
+      const amount = Math.abs(Number(data.amount));
+      delete data.amount;
+      data.delta = direction === 'out' ? -amount : amount;
+      if (direction === 'out') delete data.unit_cost;
+    }
     const ok = target.mode === 'count' ? await count.run(data) : target.mode === 'adjust' ? await adjust.run(data) : await waste.run(data);
     if (ok !== null || target.mode === 'count') setTarget(null);
   }
@@ -60,7 +68,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
               {canManage ? <TD className="text-right tabular-nums">{formatAmount(i.stock_value)}</TD> : null}
               <TD className="whitespace-nowrap text-right">
                 {canManage ? <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'count' })}>{t.inventory.count}</Button> : null}{' '}
-                {canManage ? <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'adjust' })}>{t.inventory.adjust}</Button> : null}{' '}
+                {canManage ? <Button size="sm" variant="outline" onClick={() => { setDirection('in'); setTarget({ item: i, mode: 'adjust' }); }}>{t.inventory.adjust}</Button> : null}{' '}
                 <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'waste' })}>{t.inventory.waste}</Button>
               </TD>
             </TR>
@@ -84,8 +92,14 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                   </>
                 ) : target.mode === 'adjust' ? (
                   <>
-                    <Field label={`${t.inventory.delta} (${target.item.unit})`}><Input name="delta" type="number" inputMode="decimal" step="any" required autoFocus /></Field>
-                    <Field label={t.inventory.unitCostIn}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field>
+                    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t.inventory.direction}>
+                      <Button type="button" role="radio" aria-checked={direction === 'in'} variant={direction === 'in' ? 'default' : 'outline'} onClick={() => setDirection('in')}>{t.inventory.add}</Button>
+                      <Button type="button" role="radio" aria-checked={direction === 'out'} variant={direction === 'out' ? 'default' : 'outline'} onClick={() => setDirection('out')}>{t.inventory.remove}</Button>
+                    </div>
+                    <Field label={`${direction === 'in' ? t.inventory.addQty : t.inventory.removeQty} (${target.item.unit})`}>
+                      <Input name="amount" type="number" inputMode="decimal" min={0} step="any" required autoFocus />
+                    </Field>
+                    {direction === 'in' ? <Field label={t.inventory.unitCostIn}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field> : null}
                     <Field label={t.common.reason}><Input name="note" required /></Field>
                   </>
                 ) : (

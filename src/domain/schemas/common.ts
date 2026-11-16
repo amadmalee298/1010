@@ -7,6 +7,8 @@ export const optionalText = (max = 500) =>
 export const requiredText = (max = 150) => z.string().trim().min(1).max(max);
 /** Money in THB: ≥ 0, max 2 decimals. Accepts numeric strings from forms. */
 export const money = z.coerce.number().finite().min(0).max(10_000_000).refine((v) => Math.round(v * 100) === v * 100 || Math.abs(Math.round(v * 100) - v * 100) < 1e-6, 'max 2 decimals');
+/** Cost per base unit (e.g. per gram): ≥ 0, up to 4 decimals like the database columns. */
+export const unitCost = z.coerce.number().finite().min(0).max(10_000_000).refine((v) => Math.abs(Math.round(v * 10_000) - v * 10_000) < 1e-6, 'max 4 decimals');
 export const positiveMoney = money.refine((v) => v > 0, 'must be > 0');
 /** Quantity in base unit: > 0, up to 4 decimals. */
 export const quantity = z.coerce.number().finite().positive().max(100_000_000);

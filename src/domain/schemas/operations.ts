@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { checkbox, money, nonNegativeQty, optionalText, optionalUuid, positiveMoney, quantity, requiredText, uuid } from './common';
+import { checkbox, money, nonNegativeQty, optionalText, optionalUuid, positiveMoney, quantity, requiredText, unitCost, uuid } from './common';
 import { paymentMethod } from './orders';
 
 // ---- Production ----
@@ -29,7 +29,7 @@ export const purchaseOrderSchema = z.object({
   supplier_id: uuid,
   expected_date: z.preprocess((v) => (v === '' ? undefined : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
   note: optionalText(500),
-  items: z.array(z.object({ ingredient_id: uuid, quantity, unit_cost: money })).min(1).max(100),
+  items: z.array(z.object({ ingredient_id: uuid, quantity, unit_cost: unitCost })).min(1).max(100),
 });
 export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 
@@ -37,7 +37,7 @@ export const purchaseStatusSchema = z.object({ id: uuid, status: z.enum(['ORDERE
 export const receivePurchaseSchema = z.object({
   id: uuid,
   paid_from_drawer: z.boolean().default(false),
-  items: z.array(z.object({ purchase_item_id: uuid, quantity: nonNegativeQty, unit_cost: money.optional() })).min(1),
+  items: z.array(z.object({ purchase_item_id: uuid, quantity: nonNegativeQty, unit_cost: unitCost.optional() })).min(1),
 });
 
 // ---- Cash sessions ----
