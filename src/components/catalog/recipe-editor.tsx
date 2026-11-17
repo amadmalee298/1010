@@ -11,7 +11,7 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { costRecipe, marginBand, type VatConfig } from '@/domain/costing';
-import { formatAmount, formatPercent } from '@/domain/money';
+import { formatAmount, formatPercent, formatUnitCost } from '@/domain/money';
 import { saveRecipeAction } from '@/server/actions/catalog';
 import type { IngredientRow, RecipeRow } from '@/lib/database.types';
 
@@ -91,7 +91,7 @@ export function RecipeEditor({ productId, productName, price, vat, ingredients, 
                       </NativeSelect>
                     </TD>
                     <TD><Input type="number" inputMode="decimal" min={0} step="any" value={l.quantity} onChange={(e) => update(l.key, { quantity: e.target.value })} aria-label={t.common.quantity} /></TD>
-                    <TD className="text-right tabular-nums">{ing ? `${formatAmount(ing.avg_cost)}/${ing.unit}` : '—'}</TD>
+                    <TD className="text-right tabular-nums">{ing ? `${formatUnitCost(ing.avg_cost)}/${ing.unit}` : '—'}</TD>
                     <TD className="text-right tabular-nums">{lc === undefined ? '—' : formatAmount(lc)}</TD>
                     <TD><Button variant="ghost" size="icon" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label={t.common.delete}><Trash2 /></Button></TD>
                   </TR>

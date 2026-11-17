@@ -28,6 +28,9 @@ const plain = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximum
 
 export const formatTHB = (value: Baht): string => thb.format(value);
 export const formatAmount = (value: Baht): string => plain.format(value);
+const perUnit = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+/** Cost per base unit (e.g. per gram): fractions of a baht keep up to 4 decimals instead of showing 0.00. */
+export const formatUnitCost = (value: number): string => perUnit.format(value);
 
 export function formatQty(value: number, maxFractionDigits = 3): string {
   return new Intl.NumberFormat('th-TH', { maximumFractionDigits: maxFractionDigits }).format(value);

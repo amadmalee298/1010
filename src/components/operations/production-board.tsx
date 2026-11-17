@@ -12,7 +12,7 @@ import { useAction } from '@/hooks/use-action';
 import {
   cancelProductionAction, completeProductionAction, createProductionAction, productionRequirementsAction,
 } from '@/server/actions/operations';
-import { formatAmount, formatQty } from '@/domain/money';
+import { formatAmount, formatUnitCost, formatQty } from '@/domain/money';
 import { formatDateTime } from '@/domain/datetime';
 import type { ProductionRequirementRow, ProductionRow } from '@/lib/database.types';
 
@@ -100,7 +100,12 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
                     <TBody>
                       {(reqs ?? []).map((r) => (
                         <TR key={r.ingredient_id}>
-                          <TD>{r.name_th}</TD>
+                          <TD>
+                            <p>{r.name_th}</p>
+                            <p className="text-xs text-muted-foreground tabular-nums">
+                              {formatUnitCost(r.unit_cost)}/{r.unit} · ฿{formatAmount(r.required_quantity * r.unit_cost)}
+                            </p>
+                          </TD>
                           <TD className="text-right">{formatQty(r.required_quantity)} {r.unit}</TD>
                           <TD className="text-right">{formatQty(r.stock_qty)}</TD>
                           <TD className="text-right">{r.shortage > 0 ? <Badge variant="destructive">{formatQty(r.shortage)}</Badge> : '✓'}</TD>
@@ -108,7 +113,10 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
                       ))}
                     </TBody>
                   </Table>
-                  <p className="text-sm text-muted-foreground">{t.production.totalCost} ≈ ฿{formatAmount(estimated)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.production.totalCost} ≈ ฿{formatAmount(estimated)}
+                    {selected.planned_output > 0 ? <> · {t.production.unitCost} ≈ ฿{formatAmount(estimated / selected.planned_output)}</> : null}
+                  </p>
                   <form className="grid gap-3" onSubmit={async (e) => {
                     e.preventDefault(); const fd = new FormData(e.currentTarget);
                     if (await complete.run({ production_id: selected.id, actual_output: fd.get('actual_output') })) { setSelected(null); setReqs(null); }
