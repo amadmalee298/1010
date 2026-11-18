@@ -25,15 +25,21 @@ export function sumBaht(values: readonly Baht[]): Baht {
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 2 });
 const plain = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const perUnit = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+const qtyFormats = new Map<number, Intl.NumberFormat>();
 
 export const formatTHB = (value: Baht): string => thb.format(value);
 export const formatAmount = (value: Baht): string => plain.format(value);
-const perUnit = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-/** Cost per base unit (e.g. per gram): fractions of a baht keep up to 4 decimals instead of showing 0.00. */
+/** Cost per base unit or per piece: fractions of a baht keep up to 4 decimals (like the database) instead of showing 0.00. */
 export const formatUnitCost = (value: number): string => perUnit.format(value);
 
 export function formatQty(value: number, maxFractionDigits = 3): string {
-  return new Intl.NumberFormat('th-TH', { maximumFractionDigits: maxFractionDigits }).format(value);
+  let f = qtyFormats.get(maxFractionDigits);
+  if (!f) {
+    f = new Intl.NumberFormat('th-TH', { maximumFractionDigits: maxFractionDigits });
+    qtyFormats.set(maxFractionDigits, f);
+  }
+  return f.format(value);
 }
 
 export function formatPercent(ratio: number, digits = 1): string {

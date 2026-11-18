@@ -12,7 +12,7 @@ import { useAction } from '@/hooks/use-action';
 import {
   cancelProductionAction, completeProductionAction, createProductionAction, productionRequirementsAction,
 } from '@/server/actions/operations';
-import { formatAmount, formatUnitCost, formatQty } from '@/domain/money';
+import { formatQty, formatTHB, formatUnitCost, round2, round4, sumBaht } from '@/domain/money';
 import { formatDateTime } from '@/domain/datetime';
 import type { ProductionRequirementRow, ProductionRow } from '@/lib/database.types';
 
@@ -36,7 +36,9 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
     setReqs(run.status === 'PLANNED' ? await loadReqs.run({ production_id: run.id }) : null);
   }
   const short = reqs?.some((r) => r.shortage > 0) ?? false;
-  const estimated = reqs?.reduce((s, r) => s + r.required_quantity * r.unit_cost, 0) ?? 0;
+  // Each line is rounded like the server's total_cost, and the total is the sum of the shown lines.
+  const lineCost = (r: ProductionRequirementRow) => round2(r.required_quantity * r.unit_cost);
+  const estimated = sumBaht((reqs ?? []).map(lineCost));
 
   return (
     <>
@@ -54,7 +56,7 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
               <TD className="text-right">{formatQty(r.batches)}</TD>
               <TD className="text-right">{formatQty(r.planned_output)}</TD>
               <TD className="text-right">{r.actual_output === null ? '—' : formatQty(r.actual_output)}</TD>
-              <TD className="text-right tabular-nums">{r.unit_cost === null ? '—' : formatAmount(r.unit_cost)}</TD>
+              <TD className="text-right tabular-nums">{r.unit_cost === null ? '—' : formatUnitCost(r.unit_cost)}</TD>
               <TD><Badge variant={r.status === 'COMPLETED' ? 'success' : r.status === 'PLANNED' ? 'warning' : 'secondary'}>{t.production.status[r.status]}</Badge></TD>
               <TD className="whitespace-nowrap text-xs">{formatDateTime(r.completed_at ?? r.created_at)}</TD>
             </TR>
@@ -103,7 +105,7 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
                           <TD>
                             <p>{r.name_th}</p>
                             <p className="text-xs text-muted-foreground tabular-nums">
-                              {formatUnitCost(r.unit_cost)}/{r.unit} · ฿{formatAmount(r.required_quantity * r.unit_cost)}
+                              ฿{formatUnitCost(r.unit_cost)}/{r.unit} · {formatTHB(lineCost(r))}
                             </p>
                           </TD>
                           <TD className="text-right">{formatQty(r.required_quantity)} {r.unit}</TD>
@@ -114,8 +116,8 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
                     </TBody>
                   </Table>
                   <p className="text-sm text-muted-foreground">
-                    {t.production.totalCost} ≈ ฿{formatAmount(estimated)}
-                    {selected.planned_output > 0 ? <> · {t.production.unitCost} ≈ ฿{formatAmount(estimated / selected.planned_output)}</> : null}
+                    {t.production.totalCost} ≈ {formatTHB(estimated)}
+                    {selected.planned_output > 0 ? <> · {t.production.unitCost} ≈ ฿{formatUnitCost(round4(estimated / selected.planned_output))}</> : null}
                   </p>
                   <form className="grid gap-3" onSubmit={async (e) => {
                     e.preventDefault(); const fd = new FormData(e.currentTarget);
@@ -131,8 +133,8 @@ export function ProductionBoard({ runs, products, productNames }: { runs: Produc
               ) : (
                 <div className="grid gap-1 text-sm">
                   <p>{t.production.actual}: {selected.actual_output === null ? '—' : formatQty(selected.actual_output)}</p>
-                  <p>{t.production.totalCost}: ฿{selected.total_cost === null ? '—' : formatAmount(selected.total_cost)}</p>
-                  <p>{t.production.unitCost}: ฿{selected.unit_cost === null ? '—' : formatAmount(selected.unit_cost)}</p>
+                  <p>{t.production.totalCost}: {selected.total_cost === null ? '—' : formatTHB(selected.total_cost)}</p>
+                  <p>{t.production.unitCost}: {selected.unit_cost === null ? '—' : `฿${formatUnitCost(selected.unit_cost)}`}</p>
                 </div>
               )}
             </>
