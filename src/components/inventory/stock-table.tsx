@@ -9,7 +9,7 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { formToObject } from '@/lib/form';
-import { formatAmount, formatQty } from '@/domain/money';
+import { formatAmount, formatQty, formatUnitCost } from '@/domain/money';
 import { adjustStockAction, recordWasteAction, stockCountAction } from '@/server/actions/inventory';
 import type { StockLevelRow } from '@/lib/database.types';
 
@@ -64,7 +64,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                 {i.is_low ? <Badge variant="destructive" className="ml-2">{t.catalog.lowStock}</Badge> : null}
               </TD>
               <TD className="text-right tabular-nums">{formatQty(i.reorder_level)}</TD>
-              {canManage ? <TD className="text-right tabular-nums">{formatAmount(i.avg_cost)}</TD> : null}
+              {canManage ? <TD className="text-right tabular-nums">{formatUnitCost(i.avg_cost)}</TD> : null}
               {canManage ? <TD className="text-right tabular-nums">{formatAmount(i.stock_value)}</TD> : null}
               <TD className="whitespace-nowrap text-right">
                 {canManage ? <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'count' })}>{t.inventory.count}</Button> : null}{' '}

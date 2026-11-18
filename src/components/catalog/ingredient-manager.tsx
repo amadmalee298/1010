@@ -10,7 +10,7 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { formToObject } from '@/lib/form';
-import { formatAmount, formatQty } from '@/domain/money';
+import { formatAmount, formatQty, formatUnitCost } from '@/domain/money';
 import { createIngredientCategoryAction, saveIngredientAction } from '@/server/actions/catalog';
 import type { IngredientCategoryRow, IngredientRow } from '@/lib/database.types';
 
@@ -55,7 +55,7 @@ export function IngredientManager({ ingredients, categories }: { ingredients: In
                   {low ? <Badge variant="destructive" className="ml-2">{t.catalog.lowStock}</Badge> : null}
                 </TD>
                 <TD className="text-right tabular-nums">{formatQty(i.reorder_level)}</TD>
-                <TD className="text-right tabular-nums">{formatAmount(i.avg_cost)}</TD>
+                <TD className="text-right tabular-nums">{formatUnitCost(i.avg_cost)}</TD>
                 <TD className="text-right tabular-nums">{formatAmount(Math.max(0, i.stock_qty) * i.avg_cost)}</TD>
                 <TD className="text-right">
                   {i.item_type === 'RAW' ? <Button size="sm" variant="ghost" onClick={() => setEditing(i)} aria-label={t.common.edit}><Pencil /></Button> : null}
