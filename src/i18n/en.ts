@@ -103,6 +103,7 @@ export const en: Dictionary = {
     txn: { OPENING: 'Opening', SALE: 'Sale', REFUND: 'Refund', EXPENSE: 'Expense', WITHDRAWAL: 'Cash out', DEPOSIT: 'Cash in' },
   },
   expenses: {
+    searchIngredient: 'Type to search ingredients, e.g. egg, milk, box',
     title: 'Expenses', newExpense: 'Record expense', category: 'Category', description: 'Description', amount: 'Amount',
     method: 'Paid by', fromDrawer: 'Paid from cash drawer', void: 'Void', voided: 'Voided', total: 'Total expenses',
   },

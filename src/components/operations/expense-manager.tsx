@@ -15,16 +15,23 @@ import { EXPENSE_CATEGORIES } from '@/domain/schemas/operations';
 import { formatAmount } from '@/domain/money';
 import { bangkokDate, formatDate } from '@/domain/datetime';
 import type { ExpenseRow } from '@/lib/database.types';
+import { matchIngredients, type IngredientOption } from '@/domain/ingredient-search';
 
-export function ExpenseManager({ expenses, canVoid }: { expenses: ExpenseRow[]; canVoid: boolean }) {
+/** Categories whose description is usually an ingredient (boxes and spoons are ingredients too). */
+const INGREDIENT_CATEGORIES: readonly string[] = ['วัตถุดิบ', 'บรรจุภัณฑ์'];
+
+export function ExpenseManager({ expenses, canVoid, ingredients = [] }: { expenses: ExpenseRow[]; canVoid: boolean; ingredients?: IngredientOption[] }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [voiding, setVoiding] = useState<ExpenseRow | null>(null);
+  const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
+  const [description, setDescription] = useState('');
+  const suggestions = INGREDIENT_CATEGORIES.includes(category) ? matchIngredients(ingredients, description) : [];
   const record = useAction(recordExpenseAction);
   const voidIt = useAction(voidExpenseAction);
   return (
     <>
-      <div className="mb-4 flex justify-end"><Button onClick={() => setOpen(true)}><Plus /> {t.expenses.newExpense}</Button></div>
+      <div className="mb-4 flex justify-end"><Button onClick={() => { setCategory(EXPENSE_CATEGORIES[0]); setDescription(''); setOpen(true); }}><Plus /> {t.expenses.newExpense}</Button></div>
       <Table>
         <THead><TR><TH>{t.common.date}</TH><TH>{t.expenses.category}</TH><TH>{t.expenses.description}</TH><TH>{t.expenses.method}</TH><TH className="text-right">{t.expenses.amount}</TH><TH /></TR></THead>
         <TBody>
@@ -48,11 +55,26 @@ export function ExpenseManager({ expenses, canVoid }: { expenses: ExpenseRow[]; 
           <form className="grid gap-4 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); if (await record.run(formToObject(e.currentTarget))) setOpen(false); }}>
             <Field label={t.common.date}><Input type="date" name="expense_date" defaultValue={bangkokDate()} required /></Field>
             <Field label={t.expenses.category}>
-              <NativeSelect name="category" defaultValue={EXPENSE_CATEGORIES[0]}>
+              <NativeSelect name="category" value={category} onChange={(e) => setCategory(e.target.value)}>
                 {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </NativeSelect>
             </Field>
-            <Field label={t.expenses.description} className="sm:col-span-2" error={record.fieldErrors.description?.[0]}><Input name="description" required /></Field>
+            <Field label={t.expenses.description} className="sm:col-span-2" error={record.fieldErrors.description?.[0]}>
+              <Input name="description" required autoComplete="off" value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder={INGREDIENT_CATEGORIES.includes(category) ? t.expenses.searchIngredient : undefined} />
+              {suggestions.length ? (
+                <ul className="mt-1 overflow-hidden rounded-xl border bg-card" aria-label={t.expenses.searchIngredient}>
+                  {suggestions.map((o) => (
+                    <li key={o.name_th}>
+                      <button type="button" className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-muted"
+                        onClick={() => setDescription(o.name_th)}>
+                        <span>{o.name_th}</span><span className="text-xs text-muted-foreground">{o.unit}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </Field>
             <Field label={`${t.expenses.amount} (฿)`} error={record.fieldErrors.amount?.[0]}><Input name="amount" type="number" inputMode="decimal" min={0.01} step="0.01" required /></Field>
             <Field label={t.expenses.method}>
               <NativeSelect name="payment_method" defaultValue="CASH">
