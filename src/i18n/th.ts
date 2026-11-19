@@ -105,6 +105,7 @@ export const th = {
     txn: { OPENING: 'ตั้งต้น', SALE: 'ขาย', REFUND: 'คืนเงิน', EXPENSE: 'ค่าใช้จ่าย', WITHDRAWAL: 'นำออก', DEPOSIT: 'นำเข้า' },
   },
   expenses: {
+    searchIngredient: 'พิมพ์ค้นหาวัตถุดิบ เช่น ไข่ นม กล่อง',
     title: 'ค่าใช้จ่าย', newExpense: 'บันทึกค่าใช้จ่าย', category: 'หมวด', description: 'รายละเอียด', amount: 'จำนวนเงิน',
     method: 'ชำระโดย', fromDrawer: 'จ่ายจากลิ้นชักเงินสด', void: 'ยกเลิกรายการ', voided: 'ยกเลิกแล้ว', total: 'รวมค่าใช้จ่าย',
   },

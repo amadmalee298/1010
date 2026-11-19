@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireEmployee } from '@/server/auth';
 import { listExpenses } from '@/server/repositories/operations';
+import { listIngredients } from '@/server/repositories/ingredients';
 import { getT } from '@/i18n/server';
 import { PageHeader, StatCard } from '@/components/ui/misc';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const to = isDate(sp.to) ? sp.to : bangkokDate();
   const from = isDate(sp.from) ? sp.from : addDays(to, -30);
   const [t, db] = await Promise.all([getT(), createSupabaseServerClient()]);
-  const expenses = await listExpenses(db, from, to);
+  const [expenses, ingredients] = await Promise.all([listExpenses(db, from, to), listIngredients(db, { activeOnly: true, type: 'RAW' })]);
   const total = expenses.filter((e) => !e.voided_at).reduce((s, e) => s + e.amount, 0);
   return (
     <div className="p-4 lg:p-6">
@@ -29,7 +30,8 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
         <Button type="submit" variant="outline">{t.common.search}</Button>
       </form>
       <div className="mb-4 max-w-xs"><StatCard label={t.expenses.total} value={formatTHB(total)} /></div>
-      <ExpenseManager expenses={expenses} canVoid={can(employee.role, 'manageSettings')} />
+      <ExpenseManager expenses={expenses} canVoid={can(employee.role, 'manageSettings')}
+        ingredients={ingredients.map((i) => ({ name_th: i.name_th, name_en: i.name_en, sku: i.sku, unit: i.unit }))} />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { marginBand } from '@/domain/costing';
 import { saveProductAction, uploadProductImageAction } from '@/server/actions/catalog';
 import type { CategoryRow, ProductCostRow, ProductRow } from '@/lib/database.types';
 import { IMAGE_MAX_BYTES, IMAGE_TYPES } from '@/domain/schemas/catalog';
+import { shrinkImage } from '@/lib/image-resize';
 import { toast } from 'sonner';
 
 export interface ProductListItem extends ProductRow { imageUrl: string | null; cost: ProductCostRow | null }
@@ -35,8 +36,15 @@ export function ProductManager({ products, categories }: { products: ProductList
     (showInactive || p.is_active) &&
     (!filter || p.name_th.toLowerCase().includes(filter.toLowerCase()) || (p.sku ?? '').toLowerCase().includes(filter.toLowerCase())));
 
-  async function onUpload(productId: string, file: File | undefined) {
-    if (!file) return;
+  async function onUpload(productId: string, picked: File | undefined) {
+    if (!picked) return;
+    let file: File;
+    try {
+      // Phone photos are usually several MB: resize and re-encode to a small JPEG before uploading.
+      file = await shrinkImage(picked);
+    } catch {
+      file = picked;
+    }
     if (file.size > IMAGE_MAX_BYTES || !(IMAGE_TYPES as readonly string[]).includes(file.type)) {
       toast.error(t.catalog.imageHint);
       return;
@@ -74,7 +82,7 @@ export function ProductManager({ products, categories }: { products: ProductList
                 <TD className="w-16">
                   <label className="relative grid size-12 cursor-pointer place-items-center overflow-hidden rounded-xl bg-muted" title={t.catalog.image}>
                     {p.imageUrl ? <Image src={p.imageUrl} alt={p.name_th} fill sizes="48px" className="object-cover" unoptimized /> : <ImagePlus className="size-5 text-muted-foreground" />}
-                    <input type="file" accept={IMAGE_TYPES.join(',')} className="sr-only" onChange={(e) => onUpload(p.id, e.target.files?.[0])} />
+                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => { void onUpload(p.id, e.target.files?.[0]); e.target.value = ''; }} />
                   </label>
                 </TD>
                 <TD><p className="font-medium">{p.name_th}</p><p className="text-xs text-muted-foreground">{p.sku}</p></TD>
