@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { AppRole } from '@/lib/database.types';
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
+import { isTransientStatus } from '@/domain/http-status';
 
 /** The sign-in could not be checked (database or network trouble), which is not the same as signed out. */
 export class AuthUnavailableError extends Error {
@@ -27,15 +28,34 @@ export const getCurrentEmployee = cache(async (): Promise<Employee | null> => {
   if (authError && (isAuthRetryableFetchError(authError) || (authError.status ?? 0) >= 500)) throw new AuthUnavailableError(authError);
   if (!auth.user) return null;
   // Independent lookups: run them in one round trip's time.
-  const [{ data: emp, error: empError }, { data: role, error: roleError }] = await Promise.all([
+  const [empRes, roleRes] = await Promise.all([
     supabase.from('employees').select('id, display_name, role_id, is_active').eq('user_id', auth.user.id).maybeSingle(),
     supabase.rpc('current_app_role'),
   ]);
-  // A failed lookup says nothing about the user: do not treat it as "not an employee" (→ login page).
-  if (empError || roleError) throw new AuthUnavailableError(empError ?? roleError);
+  // A lookup that could not run (network or server trouble) says nothing about the user: do not
+  // treat it as "not an employee" (→ login page). A rejected token or a permission error still means
+  // "not signed in" below, so the user can sign in again instead of being stuck on /unavailable.
+  for (const res of [empRes, roleRes]) {
+    if (res.error && isTransientStatus(res.status)) throw new AuthUnavailableError(res.error);
+  }
+  const emp = empRes.data;
+  const role = roleRes.data;
   if (!emp || !emp.is_active || !role) return null;
   return { userId: auth.user.id, employeeId: emp.id, email: auth.user.email ?? null, displayName: emp.display_name, role };
 });
+
+/**
+ * For API routes: the current employee, null when signed out, or 'unavailable' when the sign-in
+ * could not be checked (answer 503 so the client can retry instead of getting a 500 page).
+ */
+export async function getApiEmployee(): Promise<Employee | null | 'unavailable'> {
+  try {
+    return await getCurrentEmployee();
+  } catch (err) {
+    if (err instanceof AuthUnavailableError) return 'unavailable';
+    throw err;
+  }
+}
 
 /**
  * Ensure the caller is an active employee with one of `roles`.

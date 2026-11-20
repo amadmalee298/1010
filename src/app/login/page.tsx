@@ -5,6 +5,7 @@ import { LoginForm } from './login-form';
 import { redirect } from 'next/navigation';
 import { getCurrentEmployee } from '@/server/auth';
 import { homePathFor } from '@/domain/permissions';
+import { safeNextPath } from '@/domain/safe-path';
 
 export const metadata: Metadata = { title: 'เข้าสู่ระบบ' };
 
@@ -13,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   // Already signed in (e.g. the app reopened on this page): go straight in instead of asking again.
   const employee = await getCurrentEmployee().catch(() => null);
-  if (employee) redirect(homePathFor(employee.role));
+  if (employee) redirect(safeNextPath(next) ?? homePathFor(employee.role));
   return (
     <main className="grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_20%_10%,#fbe7c2,transparent_45%),radial-gradient(circle_at_90%_90%,#f6dcc0,transparent_40%)] p-4">
       <Card className="w-full max-w-sm">

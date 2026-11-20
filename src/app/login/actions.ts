@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/i18n/server';
 import { homePathFor } from '@/domain/permissions';
+import { safeNextPath } from '@/domain/safe-path';
 
 const schema = z.object({
   email: z.string().trim().email().max(200),
@@ -44,18 +45,4 @@ export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect('/login');
-}
-
-/**
- * Only a path on this site: "/orders?x=1". Rejects "//evil.com", "/\\evil.com" (browsers read a
- * backslash as a slash), control characters and anything with a scheme.
- */
-function safeNextPath(next: string | null | undefined): string | null {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || /[\\\u0000-\u001f]/.test(next)) return null;
-  try {
-    const url = new URL(next, 'http://local.invalid');
-    return url.origin === 'http://local.invalid' ? `${url.pathname}${url.search}${url.hash}` : null;
-  } catch {
-    return null;
-  }
 }

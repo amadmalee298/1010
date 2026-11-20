@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getCurrentEmployee } from '@/server/auth';
+import { getApiEmployee } from '@/server/auth';
 import { buildReport } from '@/server/reports/tables';
 import { REPORT_TYPES, reportRangeSchema, type ReportType } from '@/domain/schemas/reports';
 import { toCsv } from '@/domain/csv';
@@ -11,7 +11,8 @@ import { DbOperationError } from '@/server/action';
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   const { type } = await params;
   if (!(REPORT_TYPES as readonly string[]).includes(type)) return NextResponse.json({ error: 'unknown report' }, { status: 404 });
-  const employee = await getCurrentEmployee();
+  const employee = await getApiEmployee();
+  if (employee === 'unavailable') return NextResponse.json({ error: 'temporarily unavailable, try again' }, { status: 503, headers: { 'Retry-After': '5' } });
   if (!employee || !can(employee.role, 'viewReports')) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   const range = reportRangeSchema.safeParse({ from: request.nextUrl.searchParams.get('from'), to: request.nextUrl.searchParams.get('to') });
   if (!range.success) return NextResponse.json({ error: 'invalid range' }, { status: 400 });

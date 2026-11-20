@@ -64,8 +64,8 @@ export function ExpenseManager({ expenses, canVoid, ingredients = [] }: { expens
                 placeholder={INGREDIENT_CATEGORIES.includes(category) ? t.expenses.searchIngredient : undefined} />
               {suggestions.length ? (
                 <ul className="mt-1 overflow-hidden rounded-xl border bg-card" aria-label={t.expenses.searchIngredient}>
-                  {suggestions.map((o) => (
-                    <li key={o.name_th}>
+                  {suggestions.map((o, i) => (
+                    <li key={`${i}-${o.name_th}-${o.unit}`}>
                       <button type="button" className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-muted"
                         onClick={() => setDescription(o.name_th)}>
                         <span>{o.name_th}</span><span className="text-xs text-muted-foreground">{o.unit}</span>
