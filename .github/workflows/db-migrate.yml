@@ -65,7 +65,7 @@ jobs:
 
       - name: Apply migrations
         if: ${{ !inputs.dry_run }}
-        run: supabase db push ${{ steps.target.outputs.args }}
+        run: supabase db push --yes ${{ steps.target.outputs.args }}
 
       - name: Show migration status
         if: ${{ !inputs.dry_run }}
