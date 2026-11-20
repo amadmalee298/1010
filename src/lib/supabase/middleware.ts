@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 
 const PUBLIC_PATHS = ['/login', '/auth', '/offline', '/unavailable', '/api/telegram/', '/manifest.webmanifest', '/sw.js', '/icons/'];
@@ -36,7 +37,15 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     unavailable.search = '';
     return NextResponse.rewrite(unavailable, { status: 503 });
   }
-  const { data } = result;
+  const { data, error } = result;
+  if (error && (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)) {
+    // Supabase could not be reached, so we do not know whether the user is signed in.
+    // Sending them to /login would make them type the password again although the session is fine.
+    const unavailable = request.nextUrl.clone();
+    unavailable.pathname = '/unavailable';
+    unavailable.search = '';
+    return NextResponse.rewrite(unavailable, { status: 503 });
+  }
   const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
   if (!data.user && !isPublic) {
     const redirect = request.nextUrl.clone();

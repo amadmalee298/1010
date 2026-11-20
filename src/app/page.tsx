@@ -1,8 +1,14 @@
 import { redirect } from 'next/navigation';
-import { getCurrentEmployee } from '@/server/auth';
+import { AuthUnavailableError, getCurrentEmployee } from '@/server/auth';
 import { homePathFor } from '@/domain/permissions';
 
 export default async function Home() {
-  const employee = await getCurrentEmployee();
+  let employee;
+  try {
+    employee = await getCurrentEmployee();
+  } catch (err) {
+    if (err instanceof AuthUnavailableError) redirect('/unavailable');
+    throw err;
+  }
   redirect(employee ? homePathFor(employee.role) : '/login');
 }
