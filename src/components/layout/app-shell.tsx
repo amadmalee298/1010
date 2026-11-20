@@ -37,6 +37,10 @@ function NavLinks({ role, onNavigate }: { role: AppRole; onNavigate?: () => void
                 <Link
                   key={item.href}
                   href={item.href}
+                  // Opening the menu would otherwise prefetch ~20 pages at once; after the access token
+                  // expires each of those requests refreshes the session in parallel, which can make
+                  // Supabase revoke it (and log the user out).
+                  prefetch={false}
                   onClick={onNavigate}
                   className={cn(
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
