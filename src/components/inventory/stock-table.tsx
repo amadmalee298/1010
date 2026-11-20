@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/label';
@@ -32,6 +33,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
     const data: Record<string, unknown> = { ...formToObject(form), ingredient_id: target.item.id };
     if (target.mode === 'adjust') {
       const amount = Math.abs(Number(data.amount));
+      if (!(amount > 0)) { toast.error(t.inventory.amountPositive); return; }
       delete data.amount;
       data.delta = direction === 'out' ? -amount : amount;
       if (direction === 'out') delete data.unit_cost;
@@ -97,7 +99,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                       <Button type="button" role="radio" aria-checked={direction === 'out'} variant={direction === 'out' ? 'default' : 'outline'} onClick={() => setDirection('out')}>{t.inventory.remove}</Button>
                     </div>
                     <Field label={`${direction === 'in' ? t.inventory.addQty : t.inventory.removeQty} (${target.item.unit})`}>
-                      <Input name="amount" type="number" inputMode="decimal" min={0} step="any" required autoFocus />
+                      <Input name="amount" type="number" inputMode="decimal" min={0.0001} step="any" required autoFocus />
                     </Field>
                     {direction === 'in' ? <Field label={t.inventory.unitCostIn}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field> : null}
                     <Field label={t.common.reason}><Input name="note" required /></Field>

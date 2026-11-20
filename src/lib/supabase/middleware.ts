@@ -38,15 +38,18 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     return NextResponse.rewrite(unavailable, { status: 503 });
   }
   const { data, error } = result;
-  if (error && (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)) {
+  const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
+  if (error && !isPublic && (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)) {
     // Supabase could not be reached, so we do not know whether the user is signed in.
     // Sending them to /login would make them type the password again although the session is fine.
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'temporarily unavailable, try again' }, { status: 503, headers: { 'Retry-After': '5' } });
+    }
     const unavailable = request.nextUrl.clone();
     unavailable.pathname = '/unavailable';
     unavailable.search = '';
     return NextResponse.rewrite(unavailable, { status: 503 });
   }
-  const isPublic = PUBLIC_PATHS.some((p) => request.nextUrl.pathname.startsWith(p));
   if (!data.user && !isPublic) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = '/login';
