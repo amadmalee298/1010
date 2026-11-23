@@ -26,6 +26,7 @@ import { CustomerDialog } from './customer-dialog';
 import { DiscountDialog } from './discount-dialog';
 import { PaymentDialog } from './payment-dialog';
 import { Receipt } from './receipt';
+import { FailedSyncDialog } from './failed-sync-dialog';
 import type { PosConfig, PosMenu, PosProduct } from './types';
 
 const CART_KEY = 'pos.cart';
@@ -39,6 +40,7 @@ export function PosScreen({ menu: serverMenu, config, sessionOpen }: { menu: Pos
   const [cart, dispatch] = useReducer(cartReducer, undefined, emptyCart);
   const [category, setCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [failedOpen, setFailedOpen] = useState(false);
   const [dialog, setDialog] = useState<'customer' | 'discount' | 'payment' | 'cart' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ order: OrderDocument | null; queued: boolean; change: number; total: number } | null>(null);
@@ -176,7 +178,11 @@ export function PosScreen({ menu: serverMenu, config, sessionOpen }: { menu: Pos
           {queue.length ? (
             <div className="flex flex-wrap items-center gap-2 rounded-xl bg-info/10 p-2 text-sm">
               <CloudOff className="size-4" /> {t.pos.pendingSync}: {queue.length - failed.length}
-              {failed.length ? <Badge variant="destructive">{t.pos.syncFailed}: {failed.length}</Badge> : null}
+              {failed.length ? (
+                <button type="button" onClick={() => setFailedOpen(true)} className="rounded-full">
+                  <Badge variant="destructive">{t.pos.syncFailed}: {failed.length} · {t.pos.viewFailed}</Badge>
+                </button>
+              ) : null}
               <Button size="sm" variant="outline" className="ml-auto" disabled={!online} onClick={() => void flush()}><RefreshCw /> {t.pos.syncNow}</Button>
             </div>
           ) : null}
@@ -213,6 +219,7 @@ export function PosScreen({ menu: serverMenu, config, sessionOpen }: { menu: Pos
         </DialogContent>
       </Dialog>
 
+      <FailedSyncDialog open={failedOpen && failed.length > 0} onOpenChange={setFailedOpen} failed={failed} online={online} onRetry={() => void flush()} />
       <CustomerDialog open={dialog === 'customer'} onOpenChange={(o) => setDialog(o ? 'customer' : null)} onSelect={(c) => dispatch({ type: 'set', patch: { customer: c } })} />
       {dialog === 'discount' ? (
         <DiscountDialog open onOpenChange={(o) => setDialog(o ? 'discount' : null)} cart={cart} promotions={menu?.promotions ?? []}
