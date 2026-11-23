@@ -296,6 +296,7 @@ export interface Database {
       net_of_vat: Fn<{ p_amount: number }, number>;
       adjust_stock: Fn<{ p_ingredient_id: string; p_delta: number; p_unit_cost?: number | null; p_note?: string | null }, InventoryTransactionRow>;
       record_stock_count: Fn<{ p_ingredient_id: string; p_counted: number; p_note?: string | null }, InventoryTransactionRow | null>;
+      set_stock_cost: Fn<{ p_ingredient_id: string; p_quantity: number; p_unit_cost: number; p_note?: string | null }, IngredientRow>;
       record_waste: Fn<{ p_ingredient_id: string; p_quantity: number; p_reason: string }, WasteRow>;
       check_inventory_integrity: Fn<Record<string, never>, InventoryReconciliationRow[]>;
       current_cash_session_id: Fn<Record<string, never>, string | null>;

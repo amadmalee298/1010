@@ -47,7 +47,7 @@ export const en: Dictionary = {
   },
   inventory: {
     title: 'Stock on hand', movements: 'Movements', stockValue: 'Stock value', lowItems: 'Low stock items',
-    direction: 'Add or remove', add: 'Add (+)', remove: 'Remove (−)', addQty: 'Quantity to add', removeQty: 'Quantity to remove', amountPositive: 'Quantity must be more than 0', adjust: 'Adjust', count: 'Stock count', waste: 'Waste', delta: 'Quantity change (+/-)', unitCostIn: 'Unit cost (inbound)',
+    direction: 'Add or remove', add: 'Add (+)', remove: 'Remove (−)', addQty: 'Quantity to add', removeQty: 'Quantity to remove', amountPositive: 'Quantity must be more than 0', cost: 'Set qty & price', onHand: 'Quantity on hand', packPrice: 'Bought for (THB)', packSize: 'Quantity bought', unitCostResult: 'Cost per unit', costNoteHint: 'e.g. opening stock, price fix', pricePositive: 'Enter the price and the quantity bought', all: 'All', adjust: 'Adjust', count: 'Stock count', waste: 'Waste', delta: 'Quantity change (+/-)', unitCostIn: 'Unit cost (inbound)',
     counted: 'Counted quantity', currentStock: 'System quantity', wasteReason: 'Reason (expired, spilled…)',
     integrityOk: 'Stock matches the ledger for every item', integrityBad: 'Stock does not match the ledger', balance: 'Balance after',
     reference: 'Reference', by: 'By', ledger: 'Ledger check',

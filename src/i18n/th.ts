@@ -49,7 +49,7 @@ export const th = {
   },
   inventory: {
     title: 'สต็อกคงเหลือ', movements: 'ความเคลื่อนไหว', stockValue: 'มูลค่าสต็อก', lowItems: 'รายการใกล้หมด',
-    direction: 'เพิ่มหรือลด', add: 'เพิ่ม (+)', remove: 'ลด (−)', addQty: 'จำนวนที่เพิ่ม', removeQty: 'จำนวนที่ลด', amountPositive: 'จำนวนต้องมากกว่า 0', adjust: 'ปรับยอด', count: 'นับสต็อก', waste: 'ของเสีย', delta: 'จำนวนที่เพิ่ม/ลด (+/-)', unitCostIn: 'ต้นทุนต่อหน่วย (ถ้ารับเข้า)',
+    direction: 'เพิ่มหรือลด', add: 'เพิ่ม (+)', remove: 'ลด (−)', addQty: 'จำนวนที่เพิ่ม', removeQty: 'จำนวนที่ลด', amountPositive: 'จำนวนต้องมากกว่า 0', cost: 'ตั้งยอดและราคา', onHand: 'จำนวนที่มีอยู่จริง', packPrice: 'ซื้อมาราคา (บาท)', packSize: 'ได้ปริมาณ', unitCostResult: 'ต้นทุนต่อหน่วย', costNoteHint: 'เช่น ยอดยกมา แก้ราคา', pricePositive: 'ใส่ราคาและปริมาณที่ซื้อ', all: 'ทั้งหมด', adjust: 'ปรับยอด', count: 'นับสต็อก', waste: 'ของเสีย', delta: 'จำนวนที่เพิ่ม/ลด (+/-)', unitCostIn: 'ต้นทุนต่อหน่วย (ถ้ารับเข้า)',
     counted: 'จำนวนที่นับได้จริง', currentStock: 'คงเหลือในระบบ', wasteReason: 'สาเหตุ (เช่น หมดอายุ ทำหก)',
     integrityOk: 'สต็อกตรงกับบัญชีความเคลื่อนไหวทุกรายการ', integrityBad: 'พบสต็อกไม่ตรงกับบัญชี', balance: 'คงเหลือหลังรายการ',
     reference: 'อ้างอิง', by: 'ผู้ทำรายการ', ledger: 'ตรวจสอบบัญชีสต็อก',
