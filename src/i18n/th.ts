@@ -14,7 +14,7 @@ export const th = {
   },
   nav: {
     pos: 'ขายหน้าร้าน', orders: 'ออเดอร์', dashboard: 'ภาพรวม', products: 'สินค้า', categories: 'หมวดหมู่',
-    ingredients: 'วัตถุดิบ', recipes: 'สูตร', inventory: 'สต็อก', production: 'การผลิต', suppliers: 'ซัพพลายเออร์',
+    ingredients: 'วัตถุดิบ', recipes: 'สูตร', waste: 'ของเสีย', inventory: 'สต็อก', production: 'การผลิต', suppliers: 'ซัพพลายเออร์',
     purchasing: 'สั่งซื้อ', customers: 'ลูกค้า', promotions: 'โปรโมชั่น', expenses: 'ค่าใช้จ่าย', cash: 'ลิ้นชักเงินสด',
     reports: 'รายงาน', bills: 'บิลรออนุมัติ', accounting: 'บัญชีและงบการเงิน', signature: 'ลายเซ็นของฉัน', telegram: 'เชื่อม Telegram', employees: 'พนักงาน', audit: 'บันทึกการใช้งาน', settings: 'ตั้งค่า', signOut: 'ออกจากระบบ',
     groupSales: 'การขาย', groupStock: 'สต็อกและการผลิต', groupFinance: 'การเงิน', groupAdmin: 'ผู้ดูแล',
@@ -46,6 +46,10 @@ export const th = {
     recipeListHint: 'กด "แก้ไขสูตร" เพื่อใส่วัตถุดิบและจำนวนต่อชุด ต้นทุนและกำไรจะคำนวณให้อัตโนมัติ',
     recipeListEmpty: 'ยังไม่มีสินค้าที่ตัดสต็อกตามสูตร: ไปที่ สินค้า → แก้ไขสินค้า → การตัดสต็อก เลือก "ตัดวัตถุดิบตามสูตรตอนขาย"',
     selectIngredient: 'เลือกวัตถุดิบ', perBatch: 'ต่อชุด',
+  },
+  waste: {
+    title: 'ของเสีย / หมดอายุ', description: 'แตะรายการที่เสีย ใส่จำนวน เลือกสาเหตุ แล้วบันทึก', search: 'ค้นหา เช่น คัสตาร์ด นม',
+    left: 'เหลือ', history: 'บันทึกล่าสุด', reason: 'สาเหตุ', value: 'มูลค่า (บาท)', empty: 'ยังไม่มีการบันทึกของเสีย', monthTotal: 'ของเสียเดือนนี้',
   },
   inventory: {
     title: 'สต็อกคงเหลือ', movements: 'ความเคลื่อนไหว', stockValue: 'มูลค่าสต็อก', lowItems: 'รายการใกล้หมด',

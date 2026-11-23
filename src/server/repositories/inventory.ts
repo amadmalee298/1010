@@ -36,6 +36,12 @@ export async function recordWaste(db: SupabaseServerClient, i: { ingredient_id: 
   return unwrap(await db.rpc('record_waste', { p_ingredient_id: i.ingredient_id, p_quantity: i.quantity, p_reason: i.reason }));
 }
 
+export type WasteEntry = Tables<'waste'>;
+
+export async function listWaste(db: SupabaseServerClient, limit = 100): Promise<WasteEntry[]> {
+  return unwrap(await db.from('waste').select('*').order('created_at', { ascending: false }).limit(limit));
+}
+
 export async function integrityIssues(db: SupabaseServerClient) {
   return unwrap(await db.rpc('check_inventory_integrity'));
 }

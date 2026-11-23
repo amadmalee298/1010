@@ -11,12 +11,11 @@ import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { formToObject } from '@/lib/form';
 import { formatAmount, formatQty, formatUnitCost, round4 } from '@/domain/money';
-import { adjustStockAction, recordWasteAction, setStockCostAction, stockCountAction } from '@/server/actions/inventory';
+import { adjustStockAction, setStockCostAction, stockCountAction } from '@/server/actions/inventory';
+import { WasteDialog } from './waste-dialog';
 import type { StockLevelRow } from '@/lib/database.types';
 
-type Mode = 'count' | 'adjust' | 'waste' | 'cost';
-
-const WASTE_REASONS = ['หมดอายุ', 'เสีย', 'ทำหก', 'ตกแตก'] as const;
+type Mode = 'count' | 'adjust' | 'cost';
 
 export function StockTable({ items, canManage }: { items: StockLevelRow[]; canManage: boolean }) {
   const { t } = useI18n();
@@ -26,12 +25,9 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
   const [direction, setDirection] = useState<'in' | 'out'>('in');
   const count = useAction(stockCountAction);
   const adjust = useAction(adjustStockAction);
-  const waste = useAction(recordWasteAction);
   const setCost = useAction(setStockCostAction);
-  const pending = count.pending || adjust.pending || waste.pending || setCost.pending;
-  // Waste: quick reason buttons and an "all of it" shortcut instead of typing.
-  const [wasteQty, setWasteQty] = useState('');
-  const [wasteReason, setWasteReason] = useState<string>(WASTE_REASONS[0]);
+  const pending = count.pending || adjust.pending || setCost.pending;
+  const [wasteItem, setWasteItem] = useState<StockLevelRow | null>(null);
   // Set quantity + price in one step: "bought 30 eggs for 120 THB" gives 4.00 per egg.
   const [costQty, setCostQty] = useState('');
   const [packPrice, setPackPrice] = useState('');
@@ -40,8 +36,6 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
 
   function open(item: StockLevelRow, mode: Mode) {
     setDirection('in');
-    setWasteQty('');
-    setWasteReason(WASTE_REASONS[0]);
     setCostQty(item.stock_qty > 0 ? String(item.stock_qty) : '');
     setPackPrice('');
     setPackSize('1');
@@ -65,7 +59,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
       if (ok !== null) setTarget(null);
       return;
     }
-    const ok = target.mode === 'count' ? await count.run(data) : target.mode === 'adjust' ? await adjust.run(data) : await waste.run(data);
+    const ok = target.mode === 'count' ? await count.run(data) : await adjust.run(data);
     if (ok !== null || target.mode === 'count') setTarget(null);
   }
 
@@ -99,7 +93,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                 {canManage ? <Button size="sm" onClick={() => open(i, 'cost')}>{t.inventory.cost}</Button> : null}{' '}
                 {canManage ? <Button size="sm" variant="outline" onClick={() => open(i, 'count')}>{t.inventory.count}</Button> : null}{' '}
                 {canManage ? <Button size="sm" variant="outline" onClick={() => open(i, 'adjust')}>{t.inventory.adjust}</Button> : null}{' '}
-                <Button size="sm" variant="outline" onClick={() => open(i, 'waste')}>{t.inventory.waste}</Button>
+                <Button size="sm" variant="outline" onClick={() => setWasteItem(i)}>{t.inventory.waste}</Button>
               </TD>
             </TR>
           ))}
@@ -150,35 +144,14 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                     </p>
                     <Field label={t.common.note}><Input name="note" placeholder={t.inventory.costNoteHint} /></Field>
                   </>
-                ) : (
-                  <>
-                    <Field label={`${t.common.quantity} (${target.item.unit})`}>
-                      <div className="flex gap-2">
-                        <Input name="quantity" type="number" inputMode="decimal" min={0.0001} step="any" required autoFocus value={wasteQty} onChange={(e) => setWasteQty(e.target.value)} />
-                        {target.item.stock_qty > 0 ? (
-                          <Button type="button" variant="outline" onClick={() => setWasteQty(String(target.item.stock_qty))}>{t.inventory.all}</Button>
-                        ) : null}
-                      </div>
-                    </Field>
-                    <Field label={t.inventory.wasteReason}>
-                      <div className="grid gap-2">
-                        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t.inventory.wasteReason}>
-                          {WASTE_REASONS.map((r) => (
-                            <Button key={r} type="button" size="sm" role="radio" aria-checked={wasteReason === r}
-                              variant={wasteReason === r ? 'default' : 'outline'} onClick={() => setWasteReason(r)}>{r}</Button>
-                          ))}
-                        </div>
-                        <Input name="reason" required value={wasteReason} onChange={(e) => setWasteReason(e.target.value)} />
-                      </div>
-                    </Field>
-                  </>
-                )}
+                ) : null}
                 <DialogFooter><Button type="submit" disabled={pending}>{t.common.save}</Button></DialogFooter>
               </form>
             </>
           ) : null}
         </DialogContent>
       </Dialog>
+      <WasteDialog item={wasteItem} onClose={() => setWasteItem(null)} />
     </>
   );
 }

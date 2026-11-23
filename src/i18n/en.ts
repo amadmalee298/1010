@@ -12,7 +12,7 @@ export const en: Dictionary = {
   },
   nav: {
     pos: 'POS', orders: 'Orders', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
-    ingredients: 'Ingredients', recipes: 'Recipes', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
+    ingredients: 'Ingredients', recipes: 'Recipes', waste: 'Waste', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
     purchasing: 'Purchasing', customers: 'Customers', promotions: 'Promotions', expenses: 'Expenses', cash: 'Cash drawer',
     reports: 'Reports', bills: 'Bill inbox', accounting: 'Accounting', signature: 'My signature', telegram: 'Link Telegram', employees: 'Employees', audit: 'Audit log', settings: 'Settings', signOut: 'Sign out',
     groupSales: 'Sales', groupStock: 'Stock & production', groupFinance: 'Finance', groupAdmin: 'Admin',
@@ -44,6 +44,10 @@ export const en: Dictionary = {
     recipeListHint: 'Tap "Edit recipe" to set the ingredients and quantities per batch; cost and margin are calculated for you',
     recipeListEmpty: 'No products use recipes yet: Products → edit a product → Stock deduction → "Deduct ingredients by recipe"',
     selectIngredient: 'Select ingredient', perBatch: 'per batch',
+  },
+  waste: {
+    title: 'Waste / expired', description: 'Tap an item, enter the quantity, pick a reason and save', search: 'Search, e.g. custard, milk',
+    left: 'Left', history: 'Recent entries', reason: 'Reason', value: 'Value (THB)', empty: 'No waste recorded yet', monthTotal: 'Waste this month',
   },
   inventory: {
     title: 'Stock on hand', movements: 'Movements', stockValue: 'Stock value', lowItems: 'Low stock items',
