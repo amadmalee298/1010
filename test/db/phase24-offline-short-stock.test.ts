@@ -31,7 +31,11 @@ describe.skipIf(!hasDb)('Phase 24: offline sales are recorded even when stock is
   });
 
   it('records an offline sale beyond stock, taking stock negative at average cost', async () => {
-    const o = await order({ items: [{ product_id: shop.tart, quantity: 3 }], payments: [cash(75)], offline: true, sold_at: new Date().toISOString() });
+    // a sale rung up right now cannot claim to be offline
+    await expect(order({ items: [{ product_id: shop.tart, quantity: 3 }], payments: [cash(75)], offline: true, sold_at: new Date().toISOString() }))
+      .rejects.toThrow(/INSUFFICIENT_STOCK/);
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+    const o = await order({ items: [{ product_id: shop.tart, quantity: 3 }], payments: [cash(75)], offline: true, sold_at: fiveMinutesAgo });
     expect(o.order_number).toBeTruthy();
     expect(Number(o.cogs_total)).toBe(24);
     expect(await stockOf(db, shop.tartItem)).toBe(-1);

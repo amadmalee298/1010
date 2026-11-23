@@ -35,6 +35,10 @@ describe.skipIf(!hasDb)('Phase 23: set-up stock corrections move from 5300 to op
     await db.admin(migration);
 
     expect(await bal('5300')).toBeCloseTo(0, 2);
+    // the Reports-page P&L agrees with the ledger
+    const today = (await db.adminOne<{ d: string }>(`select public.bkk_date(now())::text as d`)).d;
+    const pnl = (await db.asOne<{ p: { shrinkage: number } }>(owner, `select public.report_pnl($1::date, $1::date) as p`, [today])).p;
+    expect(Number(pnl.shrinkage)).toBeCloseTo(0, 2);
     expect(await bal('3100') - opening0).toBeCloseTo(-350 + 450, 2); // -(100*3.5) received, +450 moved
     expect(await bal('1200')).toBeCloseTo(stock, 2);
     expect(Number((await db.adminOne<{ n: string }>(`select count(*) as n from public.inventory_transactions`)).n)).toBe(moves);
