@@ -68,7 +68,7 @@ export const en: Dictionary = {
     qrHint: 'Let the customer scan, then confirm the money arrived', qrNotSet: 'PromptPay is not configured (Settings > Shop)',
     sessionClosed: 'Cash drawer is closed — open a session to sell', openDrawer: 'Open drawer', outOfStock: 'Out',
     queuedOffline: 'Offline: order saved on this device and will sync automatically', pendingSync: 'Pending', syncNow: 'Sync now',
-    syncFailed: 'Order sync failed', menuCached: 'Using menu cached on this device', estimate: 'Estimated (server confirms)',
+    viewFailed: 'View', retrySend: 'Send again', retryAll: 'Send all again', failedHint: 'Offline sales the server refused stay on this device. Fix the cause (e.g. open the drawer) and send them again; delete only sales that did not really happen.', failedDiscardConfirm: 'Delete this ฿{amount} sale from this device? It will not be recorded.', syncFailed: 'Order sync failed', menuCached: 'Using menu cached on this device', estimate: 'Estimated (server confirms)',
   },
   orders: {
     title: 'Orders', number: 'No.', time: 'Time', cashier: 'Cashier', status: {

@@ -7,6 +7,8 @@ export const createOrderSchema = z.object({
   client_ref: uuid,
   /** When the sale happened, for orders queued offline (the server books that business date). */
   sold_at: z.iso.datetime({ offset: true }).optional(),
+  /** Sent from the offline queue: the sale already happened, so short stock must not reject it. */
+  offline: z.boolean().optional(),
   order_type: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY']).default('TAKEAWAY'),
   table_label: optionalText(40),
   note: optionalText(500),
@@ -25,7 +27,7 @@ export const createOrderSchema = z.object({
 });
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
-export const quoteOrderSchema = createOrderSchema.omit({ client_ref: true, sold_at: true, payments: true, order_type: true, table_label: true, note: true });
+export const quoteOrderSchema = createOrderSchema.omit({ client_ref: true, sold_at: true, offline: true, payments: true, order_type: true, table_label: true, note: true });
 
 export const cancelOrderSchema = z.object({ order_id: uuid, reason: requiredText(300) });
 export const refundOrderSchema = z.object({

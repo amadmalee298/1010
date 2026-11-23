@@ -20,7 +20,7 @@ export function useOrderSync() {
       for (const entry of getQueue().filter((q) => q.status === 'PENDING')) {
         try {
           // Queues saved before sold_at existed: their createdAt is when the sale happened.
-          const res = await createOrderAction({ ...entry.payload, sold_at: entry.payload.sold_at ?? entry.createdAt });
+          const res = await createOrderAction({ ...entry.payload, sold_at: entry.payload.sold_at ?? entry.createdAt, offline: true });
           if (res.ok) markResult(entry.clientRef, { ok: true });
           else if (res.retryable) {
             // Signed out, no open drawer or a passing error: keep the order queued and try again later.
