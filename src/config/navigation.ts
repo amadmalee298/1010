@@ -5,7 +5,7 @@ export type NavKey = keyof Dictionary['nav'];
 export type IconName =
   | 'pos' | 'orders' | 'dashboard' | 'products' | 'categories' | 'ingredients' | 'recipes' | 'inventory'
   | 'production' | 'suppliers' | 'purchasing' | 'customers' | 'promotions' | 'expenses' | 'cash' | 'reports'
-  | 'employees' | 'audit' | 'settings' | 'bills' | 'telegram' | 'accounting' | 'signature';
+  | 'employees' | 'audit' | 'settings' | 'bills' | 'telegram' | 'accounting' | 'signature' | 'waste';
 
 export interface NavItem { href: string; label: NavKey; icon: IconName; capability: Capability }
 export interface NavGroup { label: NavKey; items: NavItem[] }
@@ -30,6 +30,7 @@ export const NAVIGATION: NavGroup[] = [
       { href: '/ingredients', label: 'ingredients', icon: 'ingredients', capability: 'manageCatalog' },
       { href: '/recipes', label: 'recipes', icon: 'recipes', capability: 'manageRecipes' },
       { href: '/inventory', label: 'inventory', icon: 'inventory', capability: 'recordWaste' },
+      { href: '/waste', label: 'waste', icon: 'waste', capability: 'recordWaste' },
       { href: '/production', label: 'production', icon: 'production', capability: 'produce' },
       { href: '/suppliers', label: 'suppliers', icon: 'suppliers', capability: 'purchase' },
       { href: '/purchasing', label: 'purchasing', icon: 'purchasing', capability: 'purchase' },

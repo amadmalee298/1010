@@ -40,6 +40,7 @@ export const refundOrderSchema = z.object({
 
 export const stockAdjustSchema = z.object({ ingredient_id: uuid, delta: z.coerce.number().finite().refine((v) => v !== 0), unit_cost: unitCost.optional(), note: requiredText(300) });
 export const stockCountSchema = z.object({ ingredient_id: uuid, counted: z.coerce.number().finite().min(0), note: optionalText(300) });
+export const setStockCostSchema = z.object({ ingredient_id: uuid, quantity: z.coerce.number().finite().min(0).max(100_000_000), unit_cost: unitCost, note: optionalText(300) });
 export const wasteSchema = z.object({ ingredient_id: uuid, quantity, reason: requiredText(300) });
 
 // ---- Order document returned by the database (validated at the boundary) ----

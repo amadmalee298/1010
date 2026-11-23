@@ -10,11 +10,12 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { formToObject } from '@/lib/form';
-import { formatAmount, formatQty, formatUnitCost } from '@/domain/money';
-import { adjustStockAction, recordWasteAction, stockCountAction } from '@/server/actions/inventory';
+import { formatAmount, formatQty, formatUnitCost, round4 } from '@/domain/money';
+import { adjustStockAction, setStockCostAction, stockCountAction } from '@/server/actions/inventory';
+import { WasteDialog } from './waste-dialog';
 import type { StockLevelRow } from '@/lib/database.types';
 
-type Mode = 'count' | 'adjust' | 'waste';
+type Mode = 'count' | 'adjust' | 'cost';
 
 export function StockTable({ items, canManage }: { items: StockLevelRow[]; canManage: boolean }) {
   const { t } = useI18n();
@@ -24,8 +25,22 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
   const [direction, setDirection] = useState<'in' | 'out'>('in');
   const count = useAction(stockCountAction);
   const adjust = useAction(adjustStockAction);
-  const waste = useAction(recordWasteAction);
-  const pending = count.pending || adjust.pending || waste.pending;
+  const setCost = useAction(setStockCostAction);
+  const pending = count.pending || adjust.pending || setCost.pending;
+  const [wasteItem, setWasteItem] = useState<StockLevelRow | null>(null);
+  // Set quantity + price in one step: "bought 30 eggs for 120 THB" gives 4.00 per egg.
+  const [costQty, setCostQty] = useState('');
+  const [packPrice, setPackPrice] = useState('');
+  const [packSize, setPackSize] = useState('1');
+  const unitCost = Number(packSize) > 0 && packPrice !== '' ? round4(Number(packPrice) / Number(packSize)) : null;
+
+  function open(item: StockLevelRow, mode: Mode) {
+    setDirection('in');
+    setCostQty(item.stock_qty > 0 ? String(item.stock_qty) : '');
+    setPackPrice('');
+    setPackSize('1');
+    setTarget({ item, mode });
+  }
   const visible = items.filter((i) => !filter || i.name_th.toLowerCase().includes(filter.toLowerCase()));
 
   async function submit(form: HTMLFormElement) {
@@ -38,7 +53,13 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
       data.delta = direction === 'out' ? -amount : amount;
       if (direction === 'out') delete data.unit_cost;
     }
-    const ok = target.mode === 'count' ? await count.run(data) : target.mode === 'adjust' ? await adjust.run(data) : await waste.run(data);
+    if (target.mode === 'cost') {
+      if (unitCost === null) { toast.error(t.inventory.pricePositive); return; }
+      const ok = await setCost.run({ ingredient_id: target.item.id, quantity: costQty, unit_cost: unitCost, note: data.note });
+      if (ok !== null) setTarget(null);
+      return;
+    }
+    const ok = target.mode === 'count' ? await count.run(data) : await adjust.run(data);
     if (ok !== null || target.mode === 'count') setTarget(null);
   }
 
@@ -69,9 +90,10 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
               {canManage ? <TD className="text-right tabular-nums">{formatUnitCost(i.avg_cost)}</TD> : null}
               {canManage ? <TD className="text-right tabular-nums">{formatAmount(i.stock_value)}</TD> : null}
               <TD className="whitespace-nowrap text-right">
-                {canManage ? <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'count' })}>{t.inventory.count}</Button> : null}{' '}
-                {canManage ? <Button size="sm" variant="outline" onClick={() => { setDirection('in'); setTarget({ item: i, mode: 'adjust' }); }}>{t.inventory.adjust}</Button> : null}{' '}
-                <Button size="sm" variant="outline" onClick={() => setTarget({ item: i, mode: 'waste' })}>{t.inventory.waste}</Button>
+                {canManage ? <Button size="sm" onClick={() => open(i, 'cost')}>{t.inventory.cost}</Button> : null}{' '}
+                {canManage ? <Button size="sm" variant="outline" onClick={() => open(i, 'count')}>{t.inventory.count}</Button> : null}{' '}
+                {canManage ? <Button size="sm" variant="outline" onClick={() => open(i, 'adjust')}>{t.inventory.adjust}</Button> : null}{' '}
+                <Button size="sm" variant="outline" onClick={() => setWasteItem(i)}>{t.inventory.waste}</Button>
               </TD>
             </TR>
           ))}
@@ -104,18 +126,32 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                     {direction === 'in' ? <Field label={t.inventory.unitCostIn}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field> : null}
                     <Field label={t.common.reason}><Input name="note" required /></Field>
                   </>
-                ) : (
+                ) : target.mode === 'cost' ? (
                   <>
-                    <Field label={`${t.common.quantity} (${target.item.unit})`}><Input name="quantity" type="number" inputMode="decimal" min={0} step="any" required autoFocus /></Field>
-                    <Field label={t.inventory.wasteReason}><Input name="reason" required /></Field>
+                    <Field label={`${t.inventory.onHand} (${target.item.unit})`}>
+                      <Input name="quantity" type="number" inputMode="decimal" min={0} step="any" required value={costQty} onChange={(e) => setCostQty(e.target.value)} />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label={t.inventory.packPrice}>
+                        <Input type="number" inputMode="decimal" min={0} step="any" required autoFocus value={packPrice} onChange={(e) => setPackPrice(e.target.value)} />
+                      </Field>
+                      <Field label={`${t.inventory.packSize} (${target.item.unit})`}>
+                        <Input type="number" inputMode="decimal" min={0.0001} step="any" required value={packSize} onChange={(e) => setPackSize(e.target.value)} />
+                      </Field>
+                    </div>
+                    <p className="rounded-xl bg-muted p-3 text-sm">
+                      {t.inventory.unitCostResult}: <span className="font-semibold tabular-nums">{unitCost === null ? '—' : `฿${formatUnitCost(unitCost)}/${target.item.unit}`}</span>
+                    </p>
+                    <Field label={t.common.note}><Input name="note" placeholder={t.inventory.costNoteHint} /></Field>
                   </>
-                )}
+                ) : null}
                 <DialogFooter><Button type="submit" disabled={pending}>{t.common.save}</Button></DialogFooter>
               </form>
             </>
           ) : null}
         </DialogContent>
       </Dialog>
+      <WasteDialog item={wasteItem} onClose={() => setWasteItem(null)} />
     </>
   );
 }

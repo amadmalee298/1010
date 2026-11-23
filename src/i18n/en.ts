@@ -12,7 +12,7 @@ export const en: Dictionary = {
   },
   nav: {
     pos: 'POS', orders: 'Orders', dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
-    ingredients: 'Ingredients', recipes: 'Recipes', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
+    ingredients: 'Ingredients', recipes: 'Recipes', waste: 'Waste', inventory: 'Inventory', production: 'Production', suppliers: 'Suppliers',
     purchasing: 'Purchasing', customers: 'Customers', promotions: 'Promotions', expenses: 'Expenses', cash: 'Cash drawer',
     reports: 'Reports', bills: 'Bill inbox', accounting: 'Accounting', signature: 'My signature', telegram: 'Link Telegram', employees: 'Employees', audit: 'Audit log', settings: 'Settings', signOut: 'Sign out',
     groupSales: 'Sales', groupStock: 'Stock & production', groupFinance: 'Finance', groupAdmin: 'Admin',
@@ -45,9 +45,13 @@ export const en: Dictionary = {
     recipeListEmpty: 'No products use recipes yet: Products → edit a product → Stock deduction → "Deduct ingredients by recipe"',
     selectIngredient: 'Select ingredient', perBatch: 'per batch',
   },
+  waste: {
+    title: 'Waste / expired', description: 'Tap an item, enter the quantity, pick a reason and save', search: 'Search, e.g. custard, milk',
+    left: 'Left', history: 'Recent entries', reason: 'Reason', value: 'Value (THB)', empty: 'No waste recorded yet', monthTotal: 'Waste this month',
+  },
   inventory: {
     title: 'Stock on hand', movements: 'Movements', stockValue: 'Stock value', lowItems: 'Low stock items',
-    direction: 'Add or remove', add: 'Add (+)', remove: 'Remove (−)', addQty: 'Quantity to add', removeQty: 'Quantity to remove', amountPositive: 'Quantity must be more than 0', adjust: 'Adjust', count: 'Stock count', waste: 'Waste', delta: 'Quantity change (+/-)', unitCostIn: 'Unit cost (inbound)',
+    direction: 'Add or remove', add: 'Add (+)', remove: 'Remove (−)', addQty: 'Quantity to add', removeQty: 'Quantity to remove', amountPositive: 'Quantity must be more than 0', cost: 'Set qty & price', onHand: 'Quantity on hand', packPrice: 'Bought for (THB)', packSize: 'Quantity bought', unitCostResult: 'Cost per unit', costNoteHint: 'e.g. opening stock, price fix', pricePositive: 'Enter the price and the quantity bought', all: 'All', adjust: 'Adjust', count: 'Stock count', waste: 'Waste', delta: 'Quantity change (+/-)', unitCostIn: 'Unit cost (inbound)',
     counted: 'Counted quantity', currentStock: 'System quantity', wasteReason: 'Reason (expired, spilled…)',
     integrityOk: 'Stock matches the ledger for every item', integrityBad: 'Stock does not match the ledger', balance: 'Balance after',
     reference: 'Reference', by: 'By', ledger: 'Ledger check',

@@ -28,8 +28,18 @@ export async function recordStockCount(db: SupabaseServerClient, i: { ingredient
   return unwrapMaybe(await db.rpc('record_stock_count', { p_ingredient_id: i.ingredient_id, p_counted: i.counted, p_note: i.note ?? null }));
 }
 
+export async function setStockCost(db: SupabaseServerClient, i: { ingredient_id: string; quantity: number; unit_cost: number; note?: string | undefined }) {
+  return unwrap(await db.rpc('set_stock_cost', { p_ingredient_id: i.ingredient_id, p_quantity: i.quantity, p_unit_cost: i.unit_cost, p_note: i.note ?? null }));
+}
+
 export async function recordWaste(db: SupabaseServerClient, i: { ingredient_id: string; quantity: number; reason: string }) {
   return unwrap(await db.rpc('record_waste', { p_ingredient_id: i.ingredient_id, p_quantity: i.quantity, p_reason: i.reason }));
+}
+
+export type WasteEntry = Tables<'waste'>;
+
+export async function listWaste(db: SupabaseServerClient, limit = 100): Promise<WasteEntry[]> {
+  return unwrap(await db.from('waste').select('*').order('created_at', { ascending: false }).limit(limit));
 }
 
 export async function integrityIssues(db: SupabaseServerClient) {

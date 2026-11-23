@@ -2,7 +2,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { defineAction } from '../action';
 import { FRONT_OF_HOUSE, MANAGEMENT } from '@/domain/permissions';
-import { stockAdjustSchema, stockCountSchema, wasteSchema } from '@/domain/schemas/orders';
+import { setStockCostSchema, stockAdjustSchema, stockCountSchema, wasteSchema } from '@/domain/schemas/orders';
 import * as inventory from '../repositories/inventory';
 
 const paths = ['/inventory', '/ingredients', '/pos', '/recipes'];
@@ -20,4 +20,9 @@ export const stockCountAction = defineAction({
 export const recordWasteAction = defineAction({
   input: wasteSchema, roles: FRONT_OF_HOUSE, revalidate: paths,
   handler: async (input) => inventory.recordWaste(await createSupabaseServerClient(), input),
+});
+
+export const setStockCostAction = defineAction({
+  input: setStockCostSchema, roles: MANAGEMENT, revalidate: paths,
+  handler: async (input) => inventory.setStockCost(await createSupabaseServerClient(), input),
 });
