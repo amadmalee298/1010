@@ -141,6 +141,8 @@ export function PosScreen({ menu: serverMenu, config, sessionOpen }: { menu: Pos
   }
 
   const failed = queue.filter((q) => q.status === 'FAILED');
+  // Close the list once it is empty, so it does not pop up by itself when the next sale fails.
+  useEffect(() => { if (!failed.length) setFailedOpen(false); }, [failed.length]);
   const cartPanel = (cls?: string) => (
     <CartPanel
       className={cls}
