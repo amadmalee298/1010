@@ -9,10 +9,12 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { useI18n } from '@/i18n/client';
 import { useAction } from '@/hooks/use-action';
 import { receivePurchaseAction, savePurchaseOrderAction, setPurchaseStatusAction } from '@/server/actions/operations';
-import { formatAmount, formatQty, round2 } from '@/domain/money';
+import { formatAmount, formatQty, round2, round4 } from '@/domain/money';
+import { hasPack } from '@/components/inventory/pack-quantity-input';
 import type { IngredientRow, PurchaseItemRow, PurchaseOrderRow, SupplierRow } from '@/lib/database.types';
 
-interface Line { key: number; ingredientId: string; quantity: string; unitCost: string }
+/** A draft line; with `packs` the quantity and cost are per pack ("2 แผง × 150") and are turned into base units on save. */
+interface Line { key: number; ingredientId: string; quantity: string; unitCost: string; packs: boolean }
 
 export function PurchaseOrderEditor({ po, items, suppliers, ingredients }: {
   po: PurchaseOrderRow | null; items: PurchaseItemRow[]; suppliers: SupplierRow[]; ingredients: IngredientRow[];
@@ -25,8 +27,8 @@ export function PurchaseOrderEditor({ po, items, suppliers, ingredients }: {
   const [expected, setExpected] = useState(po?.expected_date ?? '');
   const [note, setNote] = useState(po?.note ?? '');
   const [lines, setLines] = useState<Line[]>(items.length
-    ? items.map((i, k) => ({ key: k, ingredientId: i.ingredient_id, quantity: String(i.quantity), unitCost: String(i.unit_cost) }))
-    : [{ key: 0, ingredientId: '', quantity: '', unitCost: '' }]);
+    ? items.map((i, k) => ({ key: k, ingredientId: i.ingredient_id, quantity: String(i.quantity), unitCost: String(i.unit_cost), packs: false }))
+    : [{ key: 0, ingredientId: '', quantity: '', unitCost: '', packs: false }]);
   const [receive, setReceive] = useState<Record<string, { quantity: string; unitCost: string }>>(
     Object.fromEntries(items.map((i) => [i.id, { quantity: String(Math.max(0, i.quantity - i.received_quantity)), unitCost: String(i.unit_cost) }])));
   const [paidFromDrawer, setPaidFromDrawer] = useState(false);
@@ -40,7 +42,15 @@ export function PurchaseOrderEditor({ po, items, suppliers, ingredients }: {
   async function submit() {
     const res = await save.run({
       id: po?.id, supplier_id: supplierId, expected_date: expected, note,
-      items: lines.filter((l) => l.ingredientId).map((l) => ({ ingredient_id: l.ingredientId, quantity: l.quantity, unit_cost: l.unitCost })),
+      items: lines.filter((l) => l.ingredientId).map((l) => {
+        const ing = byId.get(l.ingredientId);
+        if (!l.packs || !ing || !hasPack(ing)) return { ingredient_id: l.ingredientId, quantity: l.quantity, unit_cost: l.unitCost };
+        return {
+          ingredient_id: l.ingredientId,
+          quantity: String(round4(Number(l.quantity || 0) * ing.pack_size)),
+          unit_cost: String(round4(Number(l.unitCost || 0) / ing.pack_size)),
+        };
+      }),
     });
     if (res && !po) router.push(`/purchasing/${res.id}`);
   }
@@ -59,27 +69,49 @@ export function PurchaseOrderEditor({ po, items, suppliers, ingredients }: {
 
       {editable ? (
         <>
-          <Table>
-            <THead><TR><TH>{t.nav.ingredients}</TH><TH className="w-36">{t.common.quantity}</TH><TH className="w-36">{t.common.cost}/{t.common.unit}</TH><TH className="text-right">{t.common.total}</TH><TH /></TR></THead>
-            <TBody>
-              {lines.map((l) => (
-                <TR key={l.key}>
-                  <TD>
-                    <NativeSelect value={l.ingredientId} onChange={(e) => update(l.key, { ingredientId: e.target.value, unitCost: l.unitCost || String(byId.get(e.target.value)?.avg_cost ?? '') })}>
+          <div className="grid gap-3">
+            {lines.map((l) => {
+              const ing = byId.get(l.ingredientId);
+              const pack = ing && hasPack(ing) ? ing : null;
+              return (
+                <div key={l.key} className="grid gap-3 rounded-2xl border border-border bg-card p-3">
+                  <div className="flex items-center gap-2">
+                    <NativeSelect className="flex-1" value={l.ingredientId} onChange={(e) => {
+                      const next = byId.get(e.target.value);
+                      // Bought by the pack: count packs at the pack's last price; otherwise base units at average cost.
+                      if (next && hasPack(next)) update(l.key, { ingredientId: next.id, packs: true, quantity: l.quantity || '1', unitCost: next.pack_price !== null ? String(next.pack_price) : String(round2(next.avg_cost * next.pack_size)) });
+                      else update(l.key, { ingredientId: e.target.value, packs: false, unitCost: l.unitCost || String(next?.avg_cost ?? '') });
+                    }}>
                       <option value="">{t.catalog.selectIngredient}</option>
                       {ingredients.map((i) => <option key={i.id} value={i.id}>{i.name_th} ({i.unit})</option>)}
                     </NativeSelect>
-                  </TD>
-                  <TD><Input type="number" inputMode="decimal" min={0} step="any" value={l.quantity} onChange={(e) => update(l.key, { quantity: e.target.value })} /></TD>
-                  <TD><Input type="number" inputMode="decimal" min={0} step="any" value={l.unitCost} onChange={(e) => update(l.key, { unitCost: e.target.value })} /></TD>
-                  <TD className="text-right tabular-nums">{formatAmount(Number(l.quantity || 0) * Number(l.unitCost || 0))}</TD>
-                  <TD><Button size="icon" variant="ghost" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label={t.common.delete}><Trash2 /></Button></TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
+                    <Button size="icon" variant="ghost" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label={t.common.delete}><Trash2 /></Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label={t.common.quantity}>
+                      <div className="flex items-center gap-1">
+                        <Input type="number" inputMode="decimal" min={0} step="any" value={l.quantity} onChange={(e) => update(l.key, { quantity: e.target.value })} />
+                        {pack ? (
+                          <Button type="button" variant="ghost" size="sm" className="shrink-0 px-1 font-semibold text-primary" onClick={() => update(l.key, l.packs
+                            ? { packs: false, quantity: l.quantity && String(round4(Number(l.quantity) * pack.pack_size)), unitCost: l.unitCost && String(round4(Number(l.unitCost) / pack.pack_size)) }
+                            : { packs: true, quantity: l.quantity && String(round4(Number(l.quantity) / pack.pack_size)), unitCost: l.unitCost && String(round2(Number(l.unitCost) * pack.pack_size)) })}>
+                            {l.packs ? pack.pack_unit : pack.unit} ⇄
+                          </Button>
+                        ) : ing ? <span className="shrink-0 text-xs text-muted-foreground">{ing.unit}</span> : null}
+                      </div>
+                      {pack && l.packs && l.quantity ? <p className="text-xs text-muted-foreground">= {formatQty(Number(l.quantity) * pack.pack_size)} {pack.unit}</p> : null}
+                    </Field>
+                    <Field label={`${t.common.cost}/${pack && l.packs ? pack.pack_unit : ing?.unit ?? t.common.unit}`}>
+                      <Input type="number" inputMode="decimal" min={0} step="any" value={l.unitCost} onChange={(e) => update(l.key, { unitCost: e.target.value })} />
+                    </Field>
+                  </div>
+                  <p className="text-right text-sm">{t.common.total}: <span className="font-semibold tabular-nums">฿{formatAmount(Number(l.quantity || 0) * Number(l.unitCost || 0))}</span></p>
+                </div>
+              );
+            })}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => setLines((ls) => [...ls, { key: Math.max(0, ...ls.map((x) => x.key)) + 1, ingredientId: '', quantity: '', unitCost: '' }])}><Plus /> {t.purchasing.addLine}</Button>
+            <Button variant="outline" onClick={() => setLines((ls) => [...ls, { key: Math.max(0, ...ls.map((x) => x.key)) + 1, ingredientId: '', quantity: '', unitCost: '', packs: false }])}><Plus /> {t.purchasing.addLine}</Button>
             <span className="ml-auto font-semibold">{t.purchasing.subtotal}: ฿{formatAmount(subtotal)}</span>
             <Button onClick={submit} disabled={save.pending}>{t.common.save}</Button>
             {po ? <Button variant="secondary" onClick={() => status.run({ id: po.id, status: 'ORDERED' })} disabled={status.pending}><Send /> {t.purchasing.markOrdered}</Button> : null}

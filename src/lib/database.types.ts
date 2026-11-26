@@ -55,6 +55,7 @@ export type IngredientRow = {
   id: Uuid; category_id: Uuid | null; sku: string | null; name_th: string; name_en: string | null; unit: string;
   item_type: ItemType; product_id: Uuid | null; stock_qty: number; avg_cost: number; reorder_level: number;
   allow_negative: boolean; is_active: boolean; created_at: Timestamp; updated_at: Timestamp;
+  pack_unit: string | null; pack_size: number | null; pack_price: number | null;
 };
 export type RecipeRow = {
   id: Uuid; product_id: Uuid; name: string; version: number; yield_quantity: number; yield_unit: string;
@@ -193,6 +194,7 @@ export type StockLevelRow = {
   id: Uuid; name_th: string; name_en: string | null; sku: string | null; unit: string; item_type: ItemType;
   category_id: Uuid | null; product_id: Uuid | null; stock_qty: number; avg_cost: number; reorder_level: number;
   is_active: boolean; stock_value: number; is_low: boolean;
+  pack_unit: string | null; pack_size: number | null; pack_price: number | null;
 };
 export type InventoryReconciliationRow = {
   ingredient_id: Uuid; name_th: string; unit: string; stock_qty: number; ledger_qty: number; difference: number;

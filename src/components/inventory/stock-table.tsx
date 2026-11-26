@@ -13,6 +13,7 @@ import { formToObject } from '@/lib/form';
 import { formatAmount, formatQty, formatUnitCost, round4 } from '@/domain/money';
 import { adjustStockAction, setStockCostAction, stockCountAction } from '@/server/actions/inventory';
 import { WasteDialog } from './waste-dialog';
+import { hasPack, PackQuantityInput } from './pack-quantity-input';
 import type { StockLevelRow } from '@/lib/database.types';
 
 type Mode = 'count' | 'adjust' | 'cost';
@@ -30,6 +31,8 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
   const [wasteItem, setWasteItem] = useState<StockLevelRow | null>(null);
   // Set quantity + price in one step: "bought 30 eggs for 120 THB" gives 4.00 per egg.
   const [costQty, setCostQty] = useState('');
+  const [countQty, setCountQty] = useState('');
+  const [adjustQty, setAdjustQty] = useState('');
   const [packPrice, setPackPrice] = useState('');
   const [packSize, setPackSize] = useState('1');
   const unitCost = Number(packSize) > 0 && packPrice !== '' ? round4(Number(packPrice) / Number(packSize)) : null;
@@ -37,8 +40,11 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
   function open(item: StockLevelRow, mode: Mode) {
     setDirection('in');
     setCostQty(item.stock_qty > 0 ? String(item.stock_qty) : '');
-    setPackPrice('');
-    setPackSize('1');
+    setCountQty('');
+    setAdjustQty('');
+    // Bought by the pack: start from the pack's last price ("150 บาท ได้ 30 ฟอง").
+    setPackPrice(hasPack(item) && item.pack_price !== null ? String(item.pack_price) : '');
+    setPackSize(hasPack(item) ? String(item.pack_size) : '1');
     setTarget({ item, mode });
   }
   const visible = items.filter((i) => !filter || i.name_th.toLowerCase().includes(filter.toLowerCase()));
@@ -111,7 +117,7 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
               <form key={`${target.item.id}-${target.mode}`} className="grid gap-4" onSubmit={(e) => { e.preventDefault(); void submit(e.currentTarget); }}>
                 {target.mode === 'count' ? (
                   <>
-                    <Field label={`${t.inventory.counted} (${target.item.unit})`}><Input name="counted" type="number" inputMode="decimal" min={0} step="any" required autoFocus /></Field>
+                    <Field label={t.inventory.counted}><PackQuantityInput item={target.item} name="counted" value={countQty} onChange={setCountQty} required autoFocus /></Field>
                     <Field label={t.common.note}><Input name="note" /></Field>
                   </>
                 ) : target.mode === 'adjust' ? (
@@ -120,16 +126,16 @@ export function StockTable({ items, canManage }: { items: StockLevelRow[]; canMa
                       <Button type="button" role="radio" aria-checked={direction === 'in'} variant={direction === 'in' ? 'default' : 'outline'} onClick={() => setDirection('in')}>{t.inventory.add}</Button>
                       <Button type="button" role="radio" aria-checked={direction === 'out'} variant={direction === 'out' ? 'default' : 'outline'} onClick={() => setDirection('out')}>{t.inventory.remove}</Button>
                     </div>
-                    <Field label={`${direction === 'in' ? t.inventory.addQty : t.inventory.removeQty} (${target.item.unit})`}>
-                      <Input name="amount" type="number" inputMode="decimal" min={0.0001} step="any" required autoFocus />
+                    <Field label={direction === 'in' ? t.inventory.addQty : t.inventory.removeQty}>
+                      <PackQuantityInput item={target.item} name="amount" value={adjustQty} onChange={setAdjustQty} required autoFocus />
                     </Field>
-                    {direction === 'in' ? <Field label={t.inventory.unitCostIn}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field> : null}
+                    {direction === 'in' ? <Field label={`${t.inventory.unitCostIn} (฿/${target.item.unit})`}><Input name="unit_cost" type="number" inputMode="decimal" min={0} step="any" /></Field> : null}
                     <Field label={t.common.reason}><Input name="note" required /></Field>
                   </>
                 ) : target.mode === 'cost' ? (
                   <>
-                    <Field label={`${t.inventory.onHand} (${target.item.unit})`}>
-                      <Input name="quantity" type="number" inputMode="decimal" min={0} step="any" required value={costQty} onChange={(e) => setCostQty(e.target.value)} />
+                    <Field label={t.inventory.onHand}>
+                      <PackQuantityInput item={target.item} value={costQty} onChange={setCostQty} required />
                     </Field>
                     <div className="grid grid-cols-2 gap-2">
                       <Field label={t.inventory.packPrice}>

@@ -91,6 +91,15 @@ export function IngredientManager({ ingredients, categories }: { ingredients: In
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name_th}</option>)}
               </NativeSelect>
             </Field>
+            <fieldset className="grid gap-3 rounded-xl border p-3 sm:col-span-2">
+              <legend className="px-1 text-sm font-medium">{t.catalog.pack}</legend>
+              <p className="text-xs text-muted-foreground">{t.catalog.packHint}</p>
+              <div className="grid grid-cols-3 gap-2">
+                <Field label={t.catalog.packUnit}><Input name="pack_unit" defaultValue={current?.pack_unit ?? ''} maxLength={20} placeholder="แผง" /></Field>
+                <Field label={t.catalog.packSize}><Input name="pack_size" type="number" inputMode="decimal" min={0.0001} step="any" defaultValue={current?.pack_size ?? ''} placeholder="30" /></Field>
+                <Field label={t.catalog.packPrice}><Input name="pack_price" type="number" inputMode="decimal" min={0} step="0.01" defaultValue={current?.pack_price ?? ''} placeholder="150" /></Field>
+              </div>
+            </fieldset>
             <Field label={t.catalog.reorderLevel}><Input name="reorder_level" type="number" min={0} step="any" defaultValue={current?.reorder_level ?? 0} /></Field>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="allow_negative" defaultChecked={current?.allow_negative ?? false} className="size-5" /> {t.catalog.allowNegative}</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" defaultChecked={current?.is_active ?? true} className="size-5" /> {t.common.active}</label>

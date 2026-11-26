@@ -33,6 +33,10 @@ export const ingredientSchema = z.object({
   unit: requiredText(20),
   reorder_level: nonNegativeQty.default(0),
   allow_negative: checkbox.default(false),
+  /** How it is bought: "แผง" of 30 (base units) at the last price paid. Name and size go together. */
+  pack_unit: optionalText(20),
+  pack_size: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().finite().positive().max(100_000_000).optional()),
+  pack_price: z.preprocess((v) => (v === '' ? undefined : v), money.optional()),
   is_active: checkbox.default(true),
 });
 export type IngredientInput = z.infer<typeof ingredientSchema>;
