@@ -35,6 +35,9 @@ export async function saveIngredient(db: SupabaseServerClient, input: Ingredient
     unit: input.unit,
     reorder_level: input.reorder_level,
     allow_negative: input.allow_negative,
+    pack_unit: input.pack_unit && input.pack_size ? input.pack_unit : null,
+    pack_size: input.pack_unit && input.pack_size ? input.pack_size : null,
+    pack_price: input.pack_unit && input.pack_size ? input.pack_price ?? null : null,
     is_active: input.is_active,
   };
   return input.id

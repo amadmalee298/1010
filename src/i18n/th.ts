@@ -33,7 +33,7 @@ export const th = {
     modeRECIPE: 'ตัดวัตถุดิบตามสูตรตอนขาย', modeFINISHED_GOOD: 'ตัดสินค้าสำเร็จรูปที่ผลิตไว้', modeNONE: 'ไม่ตัดสต็อก',
     unitCost: 'ต้นทุน/ชิ้น', grossProfit: 'กำไรขั้นต้น', grossMargin: 'อัตรากำไร', noRecipe: 'ยังไม่มีสูตร',
     finishedStock: 'สต็อกสำเร็จรูป', showInactive: 'แสดงที่ปิดใช้งาน',
-    newIngredient: 'เพิ่มวัตถุดิบ', editIngredient: 'แก้ไขวัตถุดิบ', ingredientCategory: 'กลุ่มวัตถุดิบ',
+    pack: 'หน่วยซื้อ (แพ็ก)', packHint: 'ถ้าซื้อเป็นแผง/กล่อง/ถุง ใส่ไว้ จะกรอกจำนวนเป็นแพ็กได้ทั้งหน้าสต็อกและสั่งซื้อ เช่น แผง = 30 ฟอง ราคา 150', packUnit: 'ชื่อแพ็ก', packSize: '1 แพ็ก = (หน่วยฐาน)', packPrice: 'ราคา/แพ็ก (บาท)', newIngredient: 'เพิ่มวัตถุดิบ', editIngredient: 'แก้ไขวัตถุดิบ', ingredientCategory: 'กลุ่มวัตถุดิบ',
     newIngredientCategory: 'เพิ่มกลุ่มวัตถุดิบ', baseUnit: 'หน่วยฐาน (เช่น กรัม มล. ฟอง)', stock: 'คงเหลือ',
     avgCost: 'ต้นทุนเฉลี่ย/หน่วย', reorderLevel: 'จุดสั่งซื้อ', allowNegative: 'อนุญาตให้สต็อกติดลบ',
     lowStock: 'ใกล้หมด', raw: 'วัตถุดิบ', finished: 'สินค้าสำเร็จรูป', stockReadonly: 'สต็อกและต้นทุนปรับผ่านหน้าสต็อก/สั่งซื้อเท่านั้น',

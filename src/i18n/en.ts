@@ -31,7 +31,7 @@ export const en: Dictionary = {
     modeRECIPE: 'Deduct recipe ingredients on sale', modeFINISHED_GOOD: 'Deduct produced finished goods', modeNONE: 'No stock tracking',
     unitCost: 'Unit cost', grossProfit: 'Gross profit', grossMargin: 'Gross margin', noRecipe: 'No recipe',
     finishedStock: 'Finished stock', showInactive: 'Show inactive',
-    newIngredient: 'New ingredient', editIngredient: 'Edit ingredient', ingredientCategory: 'Ingredient group',
+    pack: 'Buying unit (pack)', packHint: 'If you buy it by the tray/box/bag, set it here to enter packs on the stock and purchasing pages, e.g. tray = 30 eggs at 150', packUnit: 'Pack name', packSize: '1 pack = (base units)', packPrice: 'Price/pack (THB)', newIngredient: 'New ingredient', editIngredient: 'Edit ingredient', ingredientCategory: 'Ingredient group',
     newIngredientCategory: 'New ingredient group', baseUnit: 'Base unit (e.g. g, ml, pcs)', stock: 'On hand',
     avgCost: 'Average cost / unit', reorderLevel: 'Reorder level', allowNegative: 'Allow negative stock',
     lowStock: 'Low stock', raw: 'Raw material', finished: 'Finished good', stockReadonly: 'Stock and cost change only via inventory/purchasing',
